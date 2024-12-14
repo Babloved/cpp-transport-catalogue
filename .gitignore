@@ -1,3 +1,6 @@
+transport-catalogue/cmake-build-debug/*
+*.txt
+.idea/*
 # Prerequisites
 *.d
 
