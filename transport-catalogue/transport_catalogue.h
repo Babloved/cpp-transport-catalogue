@@ -37,6 +37,7 @@ namespace tc{
         };
         const Path * GetPathByName(const std::string &path_name)const;
         const StopData *GetStopByName(const std::string &stop_name) const;
+        //Возвращаемое значение используется для исопльзования ссылки в структуре пути
         StopData & AddStop(const std::string &stop_name, const geo::Coordinates &coordinates);
         std::pair<const std::string, Path> & AddPath(const std::string &path_name);
         friend class Path;
