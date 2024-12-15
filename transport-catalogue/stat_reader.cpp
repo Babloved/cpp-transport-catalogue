@@ -15,25 +15,24 @@ namespace statreader {
                 std::string()};
     }
 
-    void PrintPathInformation(CommandDescription command, const TransportCatalogue& tansport_catalogue,
+    void PrintPathInformation(CommandDescription command, const TransportCatalogue& transport_catalogue,
                         std::ostream& output){
-        const auto *p_path = tansport_catalogue.GetPathByName(command.id);
-        if (p_path){
-            output << command.command << " " <<  command.id << ": " << p_path->GetCountAllStops()
-                << " stops on route, " << p_path->GetCountUniqueStops() << " unique stops, " << setprecision(6)
-                << p_path->CalculateFullPathLenght(tansport_catalogue) << " route length" << std::endl;
+        if (transport_catalogue.GetCountAllStops(command.id) > 0){
+            output << command.command << " " << command.id << ": " << transport_catalogue.GetCountAllStops(command.id)
+                   << " stops on route, " << transport_catalogue.GetCountUniqueStops(command.id) << " unique stops, " << setprecision(6)
+                   << transport_catalogue.CalculateFullPathLenght(command.id) << " route length" << std::endl;
         }else{
             output << command.command << " "<< command.id << ": not found" <<std::endl;
         }
     }
-    void PrintPathsOnStop(CommandDescription command, const TransportCatalogue& tansport_catalogue,
+    void PrintPathsOnStop(CommandDescription command, const TransportCatalogue& transport_catalogue,
                         std::ostream& output){
-            auto *p_stop = tansport_catalogue.GetStopByName(command.id);
-            if (p_stop){
-                if (!p_stop->paths_names.empty()){
+            if (transport_catalogue.IsStopExist(command.id)){
+                auto p_paths_on_stop = transport_catalogue.GetPathsOnStop(command.id);
+                if (p_paths_on_stop){
                     output << command.command<< " "<< command.id << ": buses";
-                    for (const auto &bus: p_stop->paths_names){
-                        output << " " << bus;
+                    for (const auto &path: *p_paths_on_stop){
+                        output << " " << path;
                     }
                     output <<std::endl;
                 }else{
