@@ -8,9 +8,9 @@ void Path::AddStopOnPath(const string &stop_name, const string &path_name,
                          TransportCatalogue &catalogue){
     static geo::Coordinates DummyCoordinate;
     auto &bus_stop = catalogue.AddStop(stop_name, DummyCoordinate);
-    bus_stop.paths_names.insert(path_name);
-    ordered_stops.push_back(bus_stop.stop_name);
-    stops_on_path.insert(bus_stop.stop_name);
+    bus_stop.second.paths_names.insert(path_name);
+    ordered_stops.push_back(bus_stop.first);
+    stops_on_path.insert(bus_stop.first);
 }
 
 size_t Path::GetCountUniqueStops() const{
@@ -41,10 +41,10 @@ double Path::CalculateFullPathLenght(const TransportCatalogue &catalogue) const{
     total_distance = this->IsPathLooped() ? total_distance : total_distance * 2;
     return total_distance;
 }
-const Path *TransportCatalogue::GetPathByName(const string &path_name) const{
+const std::pair<const std::string, Path> *TransportCatalogue::GetPathByName(const string &path_name) const{
     auto it_found_path = bus_paths_.find(path_name);
     if (it_found_path == bus_paths_.end()){
         return nullptr;
     }
-    return &it_found_path->second;
+    return &*it_found_path;
 }

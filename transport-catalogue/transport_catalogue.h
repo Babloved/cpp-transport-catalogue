@@ -18,12 +18,11 @@ namespace tc{
             geo::Coordinates coordinates;
             //Словарь доступных маршрутов через останоку
             std::set<std::string_view> paths_names;
-            std::string_view stop_name;
         };
-        const Path * GetPathByName(const std::string &path_name)const;
-        const StopData *GetStopByName(const std::string &stop_name) const;
+        const std::pair<const std::string, Path> * GetPathByName(const std::string &path_name)const;
+        const std::pair<const std::string, StopData> *GetStopByName(const std::string &stop_name) const;
         //Возвращаемое значение используется для исопльзования ссылки в структуре пути
-        StopData & AddStop(const std::string &stop_name, const geo::Coordinates &coordinates);
+        std::pair<const std::string, StopData> & AddStop(const std::string &stop_name, const geo::Coordinates &coordinates);
         std::pair<const std::string, Path> & AddPath(const std::string &path_name);
         friend class Path;
     private:

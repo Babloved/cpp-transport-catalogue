@@ -19,9 +19,9 @@ namespace statreader {
                         std::ostream& output){
         const auto *p_path = tansport_catalogue.GetPathByName(command.id);
         if (p_path){
-            output << command.command << " " <<  command.id << ": " << p_path->GetCountAllStops()
-                << " stops on route, " << p_path->GetCountUniqueStops() << " unique stops, " << setprecision(6)
-                << p_path->CalculateFullPathLenght(tansport_catalogue) << " route length" << std::endl;
+            output << command.command << " " <<  command.id << ": " << p_path->second.GetCountAllStops()
+                << " stops on route, " << p_path->second.GetCountUniqueStops() << " unique stops, " << setprecision(6)
+                << p_path->second.CalculateFullPathLenght(tansport_catalogue) << " route length" << std::endl;
         }else{
             output << command.command << " "<< command.id << ": not found" <<std::endl;
         }
@@ -30,9 +30,9 @@ namespace statreader {
                         std::ostream& output){
             auto *p_stop = tansport_catalogue.GetStopByName(command.id);
             if (p_stop){
-                if (!p_stop->paths_names.empty()){
+                if (!p_stop->second.paths_names.empty()){
                     output << command.command<< " "<< command.id << ": buses";
-                    for (const auto &bus: p_stop->paths_names){
+                    for (const auto &bus: p_stop->second.paths_names){
                         output << " " << bus;
                     }
                     output <<std::endl;
