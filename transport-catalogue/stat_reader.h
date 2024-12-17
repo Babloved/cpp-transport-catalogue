@@ -1,16 +1,17 @@
 #pragma once
+
 #include <iosfwd>
 #include <string_view>
 #include "transport_catalogue.h"
 
 namespace statreader{
-    struct CommandDescription {
+    struct CommandDescription{
         // Определяет, задана ли команда (поле command непустое)
-        explicit operator bool() const {
+        explicit operator bool() const{
             return !command.empty();
         }
 
-        bool operator!() const {
+        bool operator!() const{
             return !operator bool();
         }
 
@@ -18,7 +19,8 @@ namespace statreader{
         std::string id;           // id маршрута или остановки
         std::string description;  // Параметры команды
     };
-    void ParseAndPrintStat(const tc::TransportCatalogue& tansport_catalogue, std::string_view request,
-                    std::ostream& output);
+
+    void ParseAndPrintStat(const tc::TransportCatalogue &tansport_catalogue, std::string_view request,
+                           std::ostream &output);
 }
 

@@ -1,19 +1,19 @@
 #pragma once
+
 #include <string>
 #include <string_view>
 #include <vector>
-
 #include "geo.h"
 #include "transport_catalogue.h"
 
 namespace inputreader{
-    struct CommandDescription {
+    struct CommandDescription{
         // Определяет, задана ли команда (поле command непустое)
-        explicit operator bool() const {
+        explicit operator bool() const{
             return !command.empty();
         }
 
-        bool operator!() const {
+        bool operator!() const{
             return !operator bool();
         }
 
@@ -22,18 +22,16 @@ namespace inputreader{
         std::string description;  // Параметры команды
     };
 
-    class InputReader {
+    class InputReader{
     public:
         /**
          * Парсит строку в структуру CommandDescription и сохраняет результат в commands_
          */
         void ParseLine(std::string_view line);
-
         /**
          * Наполняет данными транспортный справочник, используя команды из commands_
          */
-        void ApplyCommands(tc::TransportCatalogue& catalogue) const;
-
+        void ApplyCommands(tc::TransportCatalogue &catalogue) const;
     private:
         std::vector<CommandDescription> commands_;
     };
