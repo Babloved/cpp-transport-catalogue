@@ -2,6 +2,9 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <optional>
+#include <unordered_map>
+#include <charconv>
 
 using namespace inputreader;
 using namespace std;
@@ -69,6 +72,39 @@ std::vector<std::string_view> ParseRoute(std::string_view route){
     return results;
 }
 
+inline std::optional<size_t> FindPosCharOnNum(char ch, size_t num, string_view str) noexcept{
+    size_t result{0};
+    size_t last_found_pos{0};
+    for (size_t i = num; i > 0; --i){
+        last_found_pos = str.find(ch);
+        if (last_found_pos == str.npos){
+            return std::nullopt;
+        } else{
+            result += last_found_pos + 1;
+        }
+        str = str.substr(last_found_pos + 1, str.size());
+    }
+    return result;
+}
+
+TransportCatalogue::StopDistanceMap ParseStopDistance(std::string_view str){
+    TransportCatalogue::StopDistanceMap result;
+    auto start_pos = FindPosCharOnNum(',', 2, str);
+    if (!start_pos){
+        return result;
+    }
+    str = str.substr(*start_pos + 1, str.size());
+    auto split_str = Split(str, ',');
+    for (const auto &sub_str: split_str){
+        auto str_distance = sub_str.substr(sub_str.find_first_not_of(' '), sub_str.find('m'));
+        double distance{0};
+        from_chars(str_distance.begin(), str_distance.end(), distance);
+        auto str_stop_name = sub_str.substr(sub_str.find("to "s) + 3, sub_str.size());
+        result.insert({str_stop_name, distance});
+    }
+    return result;
+};
+
 CommandDescription ParseCommandDescription(std::string_view line){
     auto colon_pos = line.find(':');
     if (colon_pos == line.npos){
@@ -94,17 +130,26 @@ void InputReader::ParseLine(std::string_view line){
     }
 }
 
+void ReadAddStop(const CommandDescription &command, TransportCatalogue &catalogue){
+    Coordinates coordinates = ParseCoordinates(command.description);
+    auto stop_distance_map = ParseStopDistance(command.description);
+    catalogue.AddStop(std::string(command.id), coordinates, stop_distance_map);
+}
+
+void ReadAddPath(const CommandDescription &command, TransportCatalogue &catalogue){
+    std::vector<std::string_view> vec_stops = ParseRoute(command.description);
+    auto &bus_path = catalogue.AddPath(command.id);
+    for (const auto &stop_name: vec_stops){
+        bus_path.AddStopOnPath(std::string(stop_name), catalogue);
+    }
+}
+
 void InputReader::ApplyCommands([[maybe_unused]] TransportCatalogue &catalogue) const{
     for (auto &command: commands_){
         if (command.command == "Stop"){
-            Coordinates coordinates = ParseCoordinates(command.description);
-            catalogue.AddStop(std::string(command.id), coordinates);
+            ReadAddStop(command, catalogue);
         } else if (command.command == "Bus"){
-            std::vector<std::string_view> vec_stops = ParseRoute(command.description);
-            auto &bus_path = catalogue.AddPath(command.id);
-            for (const auto &stop_name: vec_stops){
-                bus_path.AddStopOnPath(std::string(stop_name), catalogue);
-            }
+            ReadAddPath(command, catalogue);
         } else{
             assert("Uncorrected command");
         }

@@ -14,13 +14,19 @@ namespace tc{
 
     class Path{
     public:
+        struct Distance{
+            double geographic = 0.;
+            double custom = 0.;
+            Distance &operator+=(const Distance &oth);
+        };
+
         explicit Path(std::string path_name) : path_name_(std::move(path_name)){}
 
         size_t GetCountUniqueStops() const;
         size_t GetCountAllStops() const;
         void AddStopOnPath(const std::string &stop_name, TransportCatalogue &catalogue);
         bool IsPathLooped() const;
-        double CalculateFullPathLenght(const TransportCatalogue &catalogue) const;
+        Distance CalculateFullPathLength(const TransportCatalogue &catalogue) const;
 
         friend class TransportCatalogue;
 
@@ -30,6 +36,9 @@ namespace tc{
         std::deque<std::string_view> ordered_stops_;
         //Хэш словарь с доступными остановками на пути
         std::unordered_set<std::string_view> stops_on_path_;
+        template<typename iterator>
+        Distance CalculatePathLength(const TransportCatalogue &catalogue, const iterator &it_begin,
+                                     const iterator &it_end) const;
     };
 
     class TransportCatalogue{
@@ -40,16 +49,21 @@ namespace tc{
             geo::Coordinates coordinates;
             //Словарь доступных маршрутов через останоку
             std::set<std::string_view> paths_on_stop_;
+            //Хэш-таблица связанных остановок с растоянием до них
+            std::unordered_map<std::string_view, double> linked_stops_distance;
         };
-        const Path *GetPathByName(const std::string &path_name) const;
-        const Stop *GetStopByName(const std::string &stop_name) const;
+        const Path *GetPathByName(std::string_view path_name) const;
+        const Stop *GetStopByName(std::string_view stop_name) const;
         //Возвращаемое значение используется для исопльзования ссылки в структуре пути
-        Stop &AddStop(std::string stop_name, const geo::Coordinates &coordinates);
+        using StopDistanceMap = std::unordered_map<std::string_view, double>;
+        Stop &
+        AddStop(std::string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances);
         Path &AddPath(std::string path_name);
 
         friend class Path;
 
     private:
+        StopDistanceMap CopyWithRelinkDistanceMap(const TransportCatalogue::StopDistanceMap &stops_distances);
         std::deque<Path> all_path_;
         std::deque<Stop> all_stops_;
         //Хэш словарь с наименованием остановок
