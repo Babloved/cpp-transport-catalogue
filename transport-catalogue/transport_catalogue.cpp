@@ -1,4 +1,5 @@
 #include "transport_catalogue.h"
+#include <cassert>
 
 using namespace std;
 using namespace tc;
@@ -9,25 +10,40 @@ AddStop(string stop_name, const geo::Coordinates &coordinates, const StopDistanc
     if (bus_stop != bus_stops_names_.end()){
         if (coordinates.ValidateData()){
             bus_stop->second->coordinates = coordinates;
-            bus_stop->second->linked_stops_distance = CopyWithRelinkDistanceMap(stops_distances);
+            AddStopsDistances(bus_stop->second, stops_distances);
         }
         return *bus_stop->second;
     }
-    all_stops_.push_back({std::move(stop_name), coordinates, {}, CopyWithRelinkDistanceMap(stops_distances)});
-    return *bus_stops_names_.insert({all_stops_.back().stop_name, {&all_stops_.back()}}).first->second;
+    all_stops_.push_back({std::move(stop_name), coordinates, {}});
+    bus_stop = bus_stops_names_.insert({all_stops_.back().stop_name, {&all_stops_.back()}}).first;
+    AddStopsDistances(&all_stops_.back(), stops_distances);
+    return *bus_stop->second;
 }
 
-[[nodiscard]]TransportCatalogue::StopDistanceMap
-TransportCatalogue::CopyWithRelinkDistanceMap(const TransportCatalogue::StopDistanceMap &stops_distances){
-    StopDistanceMap copy_stops_distances;
+void
+TransportCatalogue::AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances){
     for (const auto &[name, distance]: stops_distances){
-        auto stop = GetStopByName(name);
-        if (!stop){
-            stop = &AddStop(string{name}, {}, {});
+        auto stop_dst = GetStopByName(name);
+        if (!stop_dst){
+            stop_dst = &AddStop(string{name}, {}, {});
         }
-        copy_stops_distances.insert({stop->stop_name, distance});
+        stop_distances_.insert({{stop_src, stop_dst}, distance});
     }
-    return copy_stops_distances;
+}
+
+Path::Distance TransportCatalogue::GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept{
+    assert(stop_src && stop_dst);
+    Path::Distance distance{geo::ComputeDistance(stop_src->coordinates, stop_dst->coordinates), 0};
+    auto it_custom_distance = stop_distances_.find({stop_src, stop_dst});
+    if (it_custom_distance != stop_distances_.end()){
+        distance.custom = it_custom_distance->second;
+    } else{
+        it_custom_distance = stop_distances_.find({stop_dst, stop_src});
+        if (it_custom_distance != stop_distances_.end()){
+            distance.custom = it_custom_distance->second;
+        }
+    }
+    return distance;
 }
 
 Path &TransportCatalogue::AddPath(string path_name){
@@ -87,23 +103,9 @@ Path::Distance Path::CalculatePathLength(const TransportCatalogue &catalogue,
     TransportCatalogue::Stop const *current;
     for (auto currentIterator = it_begin; currentIterator != it_end; ++currentIterator){
         current = catalogue.bus_stops_names_.find(*currentIterator)->second;
-        double current_distance{0.};
-        double geographic_distance{0.};
         if (prev){
-            geographic_distance = geo::ComputeDistance(prev->coordinates, current->coordinates);
-            auto it_linked_stop = prev->linked_stops_distance.find(current->stop_name);
-            if (it_linked_stop != prev->linked_stops_distance.end()){
-                current_distance = it_linked_stop->second;
-            } else{
-                it_linked_stop = current->linked_stops_distance.find(prev->stop_name);
-                if (it_linked_stop != current->linked_stops_distance.end()){
-                    current_distance = it_linked_stop->second;
-                } else{
-                    current_distance = geographic_distance;
-                }
-            }
+            total_distance += catalogue.GetDistanceBetweenStops(prev, current);
         }
-        total_distance += {geographic_distance, current_distance};
         prev = current;
     }
     return total_distance;

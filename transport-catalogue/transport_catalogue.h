@@ -10,6 +10,25 @@
 #include <deque>
 
 namespace tc{
+    template<typename T, typename U>
+    class PairHash{
+    public:
+        size_t operator()(const std::pair<const T *, const U *> &key) const{
+            return std::hash<const void *>()(key.first) + std::hash<const void *>()(key.second) * salt_;
+        }
+
+    private:
+        static const size_t salt_ = 77;
+    };
+
+    template<typename T, typename U>
+    class PairEqual{
+    public:
+        bool operator()(const std::pair<const T *, const U *> &lhs, const std::pair<const T *, const U *> &rhs) const{
+            return lhs.first == rhs.first && lhs.second == rhs.second;
+        }
+    };
+
     class TransportCatalogue;
 
     class Path{
@@ -49,8 +68,6 @@ namespace tc{
             geo::Coordinates coordinates;
             //Словарь доступных маршрутов через останоку
             std::set<std::string_view> paths_on_stop_;
-            //Хэш-таблица связанных остановок с растоянием до них
-            std::unordered_map<std::string_view, double> linked_stops_distance;
         };
         const Path *GetPathByName(std::string_view path_name) const;
         const Stop *GetStopByName(std::string_view stop_name) const;
@@ -59,18 +76,40 @@ namespace tc{
         Stop &
         AddStop(std::string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances);
         Path &AddPath(std::string path_name);
+        [[nodiscard]] Path::Distance GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept;
 
         friend class Path;
 
     private:
-        StopDistanceMap CopyWithRelinkDistanceMap(const TransportCatalogue::StopDistanceMap &stops_distances);
+        void AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances);
         std::deque<Path> all_path_;
         std::deque<Stop> all_stops_;
         //Хэш словарь с наименованием остановок
         std::unordered_map<std::string_view, Stop *> bus_stops_names_;
         //Хэш таблица остановок с путями
         std::unordered_map<std::string_view, Path *> bus_paths_names_;
+        //Хэш-таблица связанных остановок с растоянием между ними
+        std::unordered_map<std::pair<const Stop *, const Stop *>, double,
+                PairHash<Stop, Stop>, PairEqual<Stop, Stop>> stop_distances_;
 
     };
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  
