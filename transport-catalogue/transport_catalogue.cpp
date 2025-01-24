@@ -19,7 +19,9 @@ AddStop(string stop_name, const geo::Coordinates &coordinates, const StopDistanc
     it_stop = stops_names_.insert({all_stops_.back().stop_name_, {&all_stops_.back()}}).first;
     AddStopsDistances(&all_stops_.back(), stops_distances);
     return *it_stop->second;
-TransportCatalogue::AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances){
+}
+
+void TransportCatalogue::AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances){
     for (const auto &[name, distance]: stops_distances){
         auto stop_dst = GetStopByName(name);
         if (!stop_dst){
