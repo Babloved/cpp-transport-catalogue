@@ -17,9 +17,9 @@ namespace statreader{
                               std::ostream &output){
         auto p_path = tansport_catalogue.GetPathByName(command.id);
         if (p_path){
-            Path::Distance distance = p_path->CalculateFullPathLength(tansport_catalogue);
-            output << command.command << " " << command.id << ": " << p_path->GetCountAllStops()
-                   << " stops on route, " << p_path->GetCountUniqueStops() << " unique stops, " << setprecision(6)
+            Path::Distance distance = tansport_catalogue.CalculateFullPathLength(*p_path);
+            output << command.command << " " << command.id << ": " << tc::TransportCatalogue::GetCountAllStopsOnPath(*p_path)
+                   << " stops on route, " << tc::TransportCatalogue::GetCountUniqueStopsOnPath(*p_path) << " unique stops, " << setprecision(6)
                    << distance.custom << " route length, " << distance.custom / distance.geographic << " curvature"
                    << std::endl;
         } else{
