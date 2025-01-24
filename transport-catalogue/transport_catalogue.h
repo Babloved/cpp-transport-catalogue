@@ -30,7 +30,6 @@ namespace tc{
         }
     };
 
-
     class TransportCatalogue{
     public:
         const Path *GetPathByName(std::string_view path_name) const;
@@ -41,13 +40,11 @@ namespace tc{
         AddStop(std::string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances);
         Path &AddPath(std::string path_name);
         [[nodiscard]] Path::Distance GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept;
-
-        static size_t GetCountUniqueStopsOnPath(const Path &path) ;
-        static size_t GetCountAllStopsOnPath(const Path &path) ;
+        static size_t GetCountUniqueStopsOnPath(const Path &path);
+        static size_t GetCountAllStopsOnPath(const Path &path);
         void AddStopOnPath(const std::string &stop_name, Path &path);
-        static bool IsPathLooped(const Path &path) ;
+        static bool IsPathLooped(const Path &path);
         Path::Distance CalculateFullPathLength(const Path &path) const;
-
     private:
         void AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances);
         template<typename iterator>
