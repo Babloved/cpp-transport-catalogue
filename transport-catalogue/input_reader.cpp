@@ -138,9 +138,9 @@ void ReadAddStop(const CommandDescription &command, TransportCatalogue &catalogu
 
 void ReadAddPath(const CommandDescription &command, TransportCatalogue &catalogue){
     std::vector<std::string_view> vec_stops = ParseRoute(command.description);
-    auto &bus_path = catalogue.AddPath(command.id);
+    auto &path = catalogue.AddPath(command.id);
     for (const auto &stop_name: vec_stops){
-        bus_path.AddStopOnPath(std::string(stop_name), catalogue);
+        catalogue.AddStopOnPath(std::string(stop_name), path);
     }
 }
 
