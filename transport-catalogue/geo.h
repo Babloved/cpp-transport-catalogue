@@ -3,11 +3,10 @@
 #include <cmath>
 
 namespace geo{
-    static const double EMPTY_DATA_VALUE = NAN;
 
     struct Coordinates{
-        double lat = EMPTY_DATA_VALUE;
-        double lng = EMPTY_DATA_VALUE;
+        double lat = NAN;
+        double lng = NAN;
 
         bool operator==(const Coordinates &other) const{
             return lat == other.lat && lng == other.lng;
@@ -22,6 +21,6 @@ namespace geo{
         }
     };
 
-    inline double ComputeDistance(Coordinates from, Coordinates to);
+    double ComputeDistance(Coordinates from, Coordinates to);
 }
 

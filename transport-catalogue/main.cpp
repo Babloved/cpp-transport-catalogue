@@ -1,28 +1,24 @@
 #include <iostream>
 #include <string>
-#include "input_reader.h"
-#include "stat_reader.h"
-
+#include "json_reader.h"
 using namespace std;
 
 int main(){
-    tc::TransportCatalogue catalogue;
-    int base_request_count;
-    cin >> base_request_count >> ws;
-    {
-        inputreader::InputReader reader;
-        for (int i = 0; i < base_request_count; ++i){
-            string line;
-            getline(cin, line);
-            reader.ParseLine(line);
+    auto raw_json_str = jsonReader::ReadRawJSON(cin);
+    if (!raw_json_str.empty()){
+        cout << raw_json_str;
+        json::Document document = jsonReader::LoadJSON(raw_json_str);
+        auto &root_node = document.GetRoot();
+        if (document.GetRoot().IsMap()){
+            for (const auto &item: root_node.AsMap()){
+                cout << item.first;
+            }
         }
-        reader.ApplyCommands(catalogue);
+    } else{
+        cout << "Empty JSON";
     }
-    int stat_request_count;
-    cin >> stat_request_count >> ws;
-    for (int i = 0; i < stat_request_count; ++i){
-        string line;
-        getline(cin, line);
-        statreader::ParseAndPrintStat(catalogue, line, cout);
-    }
+    string str;
+    cin >> str;
+    cout << endl << str;
+    return 0;
 }

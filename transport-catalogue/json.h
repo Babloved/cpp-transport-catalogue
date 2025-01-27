@@ -44,10 +44,10 @@ namespace json {
                 : value_(val) {
         }
 
-        bool IsInt() const {
+        [[nodiscard]] bool IsInt() const {
             return std::holds_alternative<int>(value_);
         }
-        int AsInt() const {
+        [[nodiscard]] int AsInt() const {
             using namespace std::literals;
             if (!IsInt()) {
                 throw std::logic_error("Not an int"s);
@@ -55,13 +55,13 @@ namespace json {
             return std::get<int>(value_);
         }
 
-        bool IsPureDouble() const {
+        [[nodiscard]] bool IsPureDouble() const {
             return std::holds_alternative<double>(value_);
         }
-        bool IsDouble() const {
+        [[nodiscard]] bool IsDouble() const {
             return IsInt() || IsPureDouble();
         }
-        double AsDouble() const {
+        [[nodiscard]] double AsDouble() const {
             using namespace std::literals;
             if (!IsDouble()) {
                 throw std::logic_error("Not a double"s);
@@ -69,10 +69,10 @@ namespace json {
             return IsPureDouble() ? std::get<double>(value_) : AsInt();
         }
 
-        bool IsBool() const {
+        [[nodiscard]] bool IsBool() const {
             return std::holds_alternative<bool>(value_);
         }
-        bool AsBool() const {
+        [[nodiscard]] bool AsBool() const {
             using namespace std::literals;
             if (!IsBool()) {
                 throw std::logic_error("Not a bool"s);
@@ -81,14 +81,14 @@ namespace json {
             return std::get<bool>(value_);
         }
 
-        bool IsNull() const {
+        [[nodiscard]] bool IsNull() const {
             return std::holds_alternative<std::nullptr_t>(value_);
         }
 
-        bool IsArray() const {
+        [[nodiscard]] bool IsArray() const {
             return std::holds_alternative<Array>(value_);
         }
-        const Array& AsArray() const {
+        [[nodiscard]] const Array& AsArray() const {
             using namespace std::literals;
             if (!IsArray()) {
                 throw std::logic_error("Not an array"s);
@@ -97,10 +97,10 @@ namespace json {
             return std::get<Array>(value_);
         }
 
-        bool IsString() const {
+        [[nodiscard]] bool IsString() const {
             return std::holds_alternative<std::string>(value_);
         }
-        const std::string& AsString() const {
+        [[nodiscard]] const std::string& AsString() const {
             using namespace std::literals;
             if (!IsString()) {
                 throw std::logic_error("Not a string"s);
@@ -109,10 +109,10 @@ namespace json {
             return std::get<std::string>(value_);
         }
 
-        bool IsMap() const {
+        [[nodiscard]] bool IsMap() const {
             return std::holds_alternative<Dict>(value_);
         }
-        const Dict& AsMap() const {
+        [[nodiscard]] const Dict& AsMap() const {
             using namespace std::literals;
             if (!IsMap()) {
                 throw std::logic_error("Not a map"s);
@@ -125,7 +125,7 @@ namespace json {
             return value_ == rhs.value_;
         }
 
-        const Value& GetValue() const {
+        [[nodiscard]] const Value& GetValue() const {
             return value_;
         }
 
@@ -143,7 +143,7 @@ namespace json {
                 : root_(std::move(root)) {
         }
 
-        const Node& GetRoot() const {
+        [[nodiscard]] const Node& GetRoot() const {
             return root_;
         }
 

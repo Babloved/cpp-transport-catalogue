@@ -1,6 +1,10 @@
 #pragma once
+#include "json.h"
 
-/*
- * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
- * а также код обработки запросов к базе и формирование массива ответов в формате JSON
- */
+#include <string>
+
+namespace jsonReader{
+    json::Document LoadJSON(const std::string &s);
+    std::string Print(const json::Node &node);
+    std::string ReadRawJSON(std::istream &input);
+}
