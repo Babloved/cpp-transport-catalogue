@@ -9,6 +9,8 @@
 #include <set>
 #include <map>
 #include <deque>
+#include <memory>
+#include <string_view>
 
 namespace tc{
     template<typename T, typename U>
@@ -32,29 +34,28 @@ namespace tc{
 
     class TransportCatalogue{
     public:
-        const Path *GetPathByName(std::string_view path_name) const;
-        const Stop *GetStopByName(std::string_view stop_name) const;
-        //Возвращаемое значение используется для исопльзования ссылки в структуре пути
+        std::shared_ptr<Path> GetPathByName(std::string_view path_name) const;
+        std::shared_ptr<Stop> GetStopByName(std::string_view stop_name) const;
         using StopDistanceMap = std::unordered_map<std::string_view, double>;
-        Stop &
+        std::shared_ptr<Stop> &
         AddStop(std::string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances);
-        Path &AddPath(std::string path_name);
+        std::shared_ptr<Path> & AddPath(std::string path_name);
         [[nodiscard]] Path::Distance GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept;
         static size_t GetCountUniqueStopsOnPath(const Path &path);
         static size_t GetCountAllStopsOnPath(const Path &path);
-        void AddStopOnPath(const std::string &stop_name, Path &path);
+        void AddStopOnPath(const std::string &stop_name, const std::shared_ptr <Path> path);
         static bool IsPathLooped(const Path &path);
         Path::Distance CalculateFullPathLength(const Path &path) const;
     private:
         void AddStopsDistances(const Stop *stop_src, const TransportCatalogue::StopDistanceMap &stops_distances);
         template<typename iterator>
         Path::Distance CalculatePathLength(const iterator &it_begin, const iterator &it_end) const;
-        std::deque<Path> all_path_;
-        std::deque<Stop> all_stops_;
+        std::deque<std::shared_ptr<Path>> all_path_;
+        std::deque<std::shared_ptr<Stop>> all_stops_;
         //Хэш словарь с наименованием остановок
-        std::unordered_map<std::string_view, Stop *> stops_names_;
+        std::unordered_map<std::string_view,std::shared_ptr<Stop>> stops_names_;
         //Хэш таблица остановок с путями
-        std::unordered_map<std::string_view, Path *> paths_names_;
+        std::unordered_map<std::string_view, std::shared_ptr<Path>> paths_names_;
         //Хэш-таблица связанных остановок с растоянием между ними
         std::unordered_map<std::pair<const Stop *, const Stop *>, double,
                 PairHash<Stop, Stop>, PairEqual<Stop, Stop>> stop_distances_;

@@ -29,7 +29,7 @@ namespace statreader{
 
     void PrintPathsOnStop(CommandDescription command, const TransportCatalogue &tansport_catalogue,
                           std::ostream &output){
-        auto *p_stop = tansport_catalogue.GetStopByName(command.id);
+        auto *p_stop = tansport_catalogue.GetStopByName(command.id).get();
         if (p_stop){
             if (!p_stop->paths_on_stop_.empty()){
                 output << command.command << " " << command.id << ": buses";

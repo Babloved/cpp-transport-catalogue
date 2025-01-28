@@ -5,6 +5,7 @@
 #include <set>
 #include <unordered_set>
 #include <unordered_map>
+#include <memory>
 #include <deque>
 
 /*
@@ -18,22 +19,24 @@
  * Если структура вашего приложения не позволяет так сделать, просто оставьте этот файл пустым.
  *
  */
+struct Path;
 struct Stop{
     const std::string stop_name_;
     //Координаты остановки
     geo::Coordinates coordinates_;
     //Словарь доступных маршрутов через останоку
-    std::set<std::string_view> paths_on_stop_;
+    std::unordered_set<std::shared_ptr<Path>> paths_on_stop_;
 };
 
-class Path{
-public:
+struct Path{
     struct Distance{
         double geographic = 0.;
         double custom = 0.;
         Distance &operator+=(const Distance &oth);
     };
+
     explicit Path(std::string path_name) : path_name_(std::move(path_name)){}
+
     const std::string path_name_;
     //Дэка с последовательным расположением остановок
     std::deque<std::string_view> ordered_stops_;
