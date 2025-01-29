@@ -1,5 +1,5 @@
 #pragma once
-
+#define _USE_MATH_DEFINES
 #include "domain.h"
 #include "geo.h"
 #include <unordered_map>
