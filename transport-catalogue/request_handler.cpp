@@ -21,7 +21,7 @@ optional<PathStat> RequestHandler::GetPathStat(const string_view &path_name) con
     return {nullopt};
 }
 
-unordered_set<shared_ptr<Path>> * RequestHandler::GetBusesByStop(const string_view &stop_name) const{
+std::set<std::shared_ptr<Path>, PathComp> * RequestHandler::GetBusesByStop(const std::string_view &stop_name) const{
     auto p_stop = db_.GetStopByName(stop_name);
     if (p_stop){
         return &p_stop->paths_on_stop_;

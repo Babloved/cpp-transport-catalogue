@@ -4,8 +4,10 @@
 #include <string>
 #include <utility>
 #include <string_view>
+#include <set>
 #include "transport_catalogue.h"
 #include "json.h"
+#include "domain.h"
 
 struct PathStat{
     double curvature;
@@ -26,7 +28,7 @@ public:
     // Возвращает информацию о маршруте (запрос Bus)
     std::optional<PathStat> GetPathStat(const std::string_view &path_name) const;
     // Возвращает маршруты, проходящие через
-    std::unordered_set<std::shared_ptr<Path>> *GetBusesByStop(const std::string_view &stop_name) const;
+    std::set<std::shared_ptr<Path>, PathComp> * GetBusesByStop(const std::string_view &stop_name) const;
 
 //    // Этот метод будет нужен в следующей части итогового проекта
 //    svg::Document RenderMap() const;

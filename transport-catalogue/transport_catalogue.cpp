@@ -1,11 +1,11 @@
 #include "transport_catalogue.h"
-
+#include "domain.h"
 #include <cassert>
 
 using namespace std;
 using namespace tc;
 
-shared_ptr<Stop> & TransportCatalogue::
+shared_ptr<Stop> &TransportCatalogue::
 AddStop(string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances){
     auto it_stop = stops_names_.find(stop_name);
     if (it_stop != stops_names_.end()){
@@ -46,7 +46,7 @@ Path::Distance TransportCatalogue::GetDistanceBetweenStops(const Stop *stop_src,
     return distance;
 }
 
-shared_ptr<Path> & TransportCatalogue::AddPath(string path_name){
+shared_ptr<Path> &TransportCatalogue::AddPath(string path_name){
     auto &path = all_path_.emplace_back(make_shared<Path>(path_name));
     return paths_names_.insert({path->path_name_, {path}}).first->second;
 }
@@ -76,15 +76,19 @@ void TransportCatalogue::AddStopOnPath(const std::string &stop_name, const share
     path->stops_on_path_.insert(stop->stop_name_);
 }
 
-size_t TransportCatalogue::GetCountUniqueStopsOnPath(const Path &path) {
+size_t TransportCatalogue::GetCountUniqueStopsOnPath(const Path &path){
     return path.stops_on_path_.size();
 }
 
-size_t TransportCatalogue::GetCountAllStopsOnPath(const Path &path) {
-    return path.ordered_stops_.size();
+size_t TransportCatalogue::GetCountAllStopsOnPath(const Path &path){
+    size_t path_size{path.ordered_stops_.size()};
+    if (!IsPathLooped(path)){
+        path_size = path_size  * 2 - 1;
+    }
+    return path_size;
 }
 
-bool TransportCatalogue::IsPathLooped(const Path &path) {
+bool TransportCatalogue::IsPathLooped(const Path &path){
     return path.ordered_stops_.front() == path.ordered_stops_.back();
 }
 

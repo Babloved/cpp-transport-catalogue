@@ -70,9 +70,6 @@ void jsonReader::LoadDataFromDocumentToDB(const json::Document &doc, tc::Transpo
             for (const auto &stop_name: data.at("stops").AsArray()){
                 db.AddStopOnPath(stop_name.AsString(), path);
             }
-            if (!data.at("is_roundtrip").AsBool()){
-                db.AddStopOnPath(data.at("stops").AsArray().front().AsString(), path);
-            }
         }
     }
 }
@@ -102,7 +99,7 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, tc::
             auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
             if (path_stat){
                 response["curvature"] = path_stat->curvature;
-                response["route_length"] = path_stat->route_length;
+                response["route_length"] = static_cast<int>(path_stat->route_length);
                 response["stop_count"] = static_cast<int>(path_stat->stop_count);
                 response["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
             }else{
