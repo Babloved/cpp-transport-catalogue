@@ -72,8 +72,8 @@ void TransportCatalogue::AddStopOnPath(const std::string &stop_name, const share
     static geo::Coordinates DummyCoordinate;
     auto &stop = this->AddStop(stop_name, DummyCoordinate, {});
     stop->paths_on_stop_.insert(path);
-    path->ordered_stops_.push_back(stop->stop_name_);
-    path->stops_on_path_.insert(stop->stop_name_);
+    path->ordered_stops_.push_back(stop);
+    path->stops_on_path_.insert(stop);
 }
 
 size_t TransportCatalogue::GetCountUniqueStopsOnPath(const Path &path){
@@ -104,7 +104,7 @@ Path::Distance TransportCatalogue::CalculatePathLength(const iterator &it_begin,
     Stop const *prev = nullptr;
     Stop const *current;
     for (auto currentIterator = it_begin; currentIterator != it_end; ++currentIterator){
-        current = this->stops_names_.find(*currentIterator)->second.get();
+        current = (*currentIterator).get();
         if (prev){
             total_distance += this->GetDistanceBetweenStops(prev, current);
         }
@@ -126,6 +126,10 @@ Path::Distance TransportCatalogue::CalculateFullPathLength(const Path &path) con
 
 void TransportCatalogue::SetPathLooped(Path &path, bool is_looped){
     path.path_looped_ = is_looped;
+}
+
+std::deque<std::shared_ptr<Path>> TransportCatalogue::GetAllPath(){
+    return all_path_;
 }
 
 

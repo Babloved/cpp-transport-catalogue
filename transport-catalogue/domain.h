@@ -9,7 +9,6 @@
 #include <deque>
 #include <algorithm>
 
-
 /*
  * В этом файле вы можете разместить классы/структуры, которые являются частью предметной области (domain)
  * вашего приложения и не зависят от транспортного справочника. Например Автобусные маршруты и Остановки.
@@ -22,36 +21,35 @@
  *
  */
 
-
+struct Stop;
 struct Path{
     const std::string path_name_;
+
     struct Distance{
         double geographic = 0.;
         double custom = 0.;
         Distance &operator+=(const Distance &oth);
     };
 
-
     explicit Path(std::string path_name) : path_name_(std::move(path_name)){}
 
-
     //Дэка с последовательным расположением остановок
-    std::deque<std::string_view> ordered_stops_;
+    std::deque<std::shared_ptr<Stop>> ordered_stops_;
     //Хэш словарь с доступными остановками на пути
-    std::unordered_set<std::string_view> stops_on_path_;
+    std::unordered_set<std::shared_ptr<Stop>> stops_on_path_;
     bool path_looped_{false};
 };
 
-
-struct PathComp {
-    bool operator()(const std::shared_ptr<Path>& lhs, const std::shared_ptr<Path>& rhs) const {
+struct PathComp{
+    bool operator()(const std::shared_ptr<Path> &lhs, const std::shared_ptr<Path> &rhs) const{
         return lhs->path_name_ < rhs->path_name_;
     }
 };
+
 struct Stop{
     const std::string stop_name_;
     //Координаты остановки
     geo::Coordinates coordinates_;
     //Словарь доступных маршрутов через останоку
-    std::set<std::shared_ptr<Path>,PathComp> paths_on_stop_;
+    std::set<std::shared_ptr<Path>, PathComp> paths_on_stop_;
 };

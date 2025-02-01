@@ -51,7 +51,7 @@ json::Document jsonReader::LoadStreamJSON(std::istream &input){
     return jsonReader::LoadJSON(std::move(json_raw_string));
 }
 
-void jsonReader::LoadRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
+void jsonReader::LoadStatRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
     auto base_requests = doc.GetRoot().AsMap().at("base_requests").AsArray();
     for (const auto &base_request: base_requests){
         const auto data = base_request.AsMap();
@@ -63,6 +63,7 @@ void jsonReader::LoadRequestsFromDocumentToDB(const json::Document &doc, tc::Tra
         }
     }
 }
+
 
 void jsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
     tc::TransportCatalogue::StopDistanceMap stop_distance_map;
@@ -126,7 +127,9 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, tc::
     }
     return Document(output);
 }
-
+void jsonReader::LoadRenderSettingsFromDocument(const json::Document &doc, tc::TransportCatalogue &db){
+    //TODO Добавить загрузчк настроек
+}
 
 
 

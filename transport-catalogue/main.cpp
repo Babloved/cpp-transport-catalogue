@@ -9,7 +9,7 @@ using namespace std;
 int main(){
     auto doc  = jsonReader::LoadStreamJSON(std::cin);
     tc::TransportCatalogue db;
-    jsonReader::LoadRequestsFromDocumentToDB(doc, db);
+    jsonReader::LoadStatRequestsFromDocumentToDB(doc, db);
     auto doc_res = jsonReader::ProcessRequestsFromDocument(doc, db);
     Print(doc_res, cout);
 

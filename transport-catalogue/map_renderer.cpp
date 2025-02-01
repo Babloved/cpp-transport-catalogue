@@ -1,9 +1,14 @@
 #include "map_renderer.h"
 // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
 
+
+bool renderer::IsZero(double value){
+return std::abs(value) < renderer::EPSILON;
+}
+
 template<typename PointInputIt>
-SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_end,
-                                 double max_width, double max_height, double padding)
+renderer::SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_end,
+                                           double max_width, double max_height, double padding)
         : padding_(padding) //
 {
     // Если точки поверхности сферы не заданы, вычислять нечего
@@ -47,4 +52,8 @@ SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_
         // Коэффициент масштабирования по высоте ненулевой, используем его
         zoom_coeff_ = *height_zoom;
     }
+}
+
+svg::Document renderer::MapRenderer::RenderDocument(){
+    return svg::Document();
 }

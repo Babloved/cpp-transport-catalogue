@@ -1,12 +1,6 @@
 #include "request_handler.h"
 
-/*
- * Здесь можно было бы разместить код обработчика запросов к базе, содержащего логику, которую не
- * хотелось бы помещать ни в transport_catalogue, ни в json reader.
- *
- * Если вы затрудняетесь выбрать, что можно было бы поместить в этот файл,
- * можете оставить его пустым.
- */
+
 using namespace std;
 
 optional<PathStat> RequestHandler::GetPathStat(const string_view &path_name) const{
@@ -27,5 +21,15 @@ std::set<std::shared_ptr<Path>, PathComp> * RequestHandler::GetBusesByStop(const
         return &p_stop->paths_on_stop_;
     }
     return nullptr;
+}
+
+svg::Document RequestHandler::RenderMap() const{
+//    svg::Document doc;
+//    for (const auto &item: db_.){
+//
+//    }
+//    GetBusesByStop()
+//    return renderer_.RenderDocument();
+    return {};
 }
 

@@ -8,30 +8,55 @@
 #include <optional>
 #include <vector>
 
-inline const double EPSILON = 1e-6;
+namespace renderer{
+    inline const double EPSILON = 1e-6;
 
-bool IsZero(double value){
-    return std::abs(value) < EPSILON;
-}
+    bool IsZero(double value);
 
-class SphereProjector{
-public:
-    // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
-    template<typename PointInputIt>
-    SphereProjector(PointInputIt points_begin, PointInputIt points_end,
-                    double max_width, double max_height, double padding);
+    class SphereProjector{
+    public:
+        // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
+        template<typename PointInputIt>
+        SphereProjector(PointInputIt points_begin, PointInputIt points_end,
+                        double max_width, double max_height, double padding);
 
-    // Проецирует широту и долготу в координаты внутри SVG-изображения
-    svg::Point operator()(geo::Coordinates coords) const{
-        return {
-                (coords.lng - min_lon_) * zoom_coeff_ + padding_,
-                (max_lat_ - coords.lat) * zoom_coeff_ + padding_
+        // Проецирует широту и долготу в координаты внутри SVG-изображения
+        svg::Point operator()(geo::Coordinates coords) const{
+            return {
+                    (coords.lng - min_lon_) * zoom_coeff_ + padding_,
+                    (max_lat_ - coords.lat) * zoom_coeff_ + padding_
+            };
+        }
+
+    private:
+        double padding_;
+        double min_lon_ = 0;
+        double max_lat_ = 0;
+        double zoom_coeff_ = 0;
+    };
+
+    class MapRenderer{
+    public:
+        struct RenderSettings{
+            double width_;
+            double height_;
+            double padding_;
+            double line_width_;
+            double stop_radius_;
+            int bus_label_font_size_;
+            std::pair<double, double> bus_label_offset_;
+            int stop_label_font_size_;
+            std::pair<double, double> stop_label_offset_;
+            svg::Color underlayer_color_;
+            double underlayer_width_;
+            std::vector<svg::Color> color_palette_;
+
         };
-    }
 
-private:
-    double padding_;
-    double min_lon_ = 0;
-    double max_lat_ = 0;
-    double zoom_coeff_ = 0;
-};
+        explicit MapRenderer(RenderSettings settings) : settings_(std::move(settings)){};
+        svg::Document RenderDocument();
+    private:
+        RenderSettings settings_;
+    };
+
+}
