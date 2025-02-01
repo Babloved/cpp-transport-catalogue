@@ -51,27 +51,60 @@ json::Document jsonReader::LoadStreamJSON(std::istream &input){
     return jsonReader::LoadJSON(std::move(json_raw_string));
 }
 
-void jsonReader::LoadDataFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
+void jsonReader::LoadRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
     auto base_requests = doc.GetRoot().AsMap().at("base_requests").AsArray();
     for (const auto &base_request: base_requests){
         const auto data = base_request.AsMap();
         const auto &type_data = data.at("type").AsString();
         if (type_data == "Stop"){
-            tc::TransportCatalogue::StopDistanceMap stop_distance_map;
-            for (const auto &[stop_name, distance]: data.at("road_distances").AsMap()){
-                stop_distance_map.insert({stop_name, distance.AsDouble()});
-            }
-            db.AddStop(data.at("name").AsString(),
-                       {data.at("latitude").AsDouble(), data.at("longitude").AsDouble()},
-                       stop_distance_map
-            );
+            LoadStopRequestToDB(data, db);
         } else if (type_data == "Bus"){
-            auto &path = db.AddPath(data.at("name").AsString());
-            for (const auto &stop_name: data.at("stops").AsArray()){
-                db.AddStopOnPath(stop_name.AsString(), path);
-            }
-            db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
+            LoadBusRequestToDB(data, db);
         }
+    }
+}
+
+void jsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+    tc::TransportCatalogue::StopDistanceMap stop_distance_map;
+    for (const auto &[stop_name, distance]: data.at("road_distances").AsMap()){
+        stop_distance_map.insert({stop_name, distance.AsDouble()});
+    }
+    db.AddStop(data.at("name").AsString(),
+               {data.at("latitude").AsDouble(), data.at("longitude").AsDouble()},
+               stop_distance_map
+    );
+}
+
+void jsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+    auto &path = db.AddPath(data.at("name").AsString());
+    for (const auto &stop_name: data.at("stops").AsArray()){
+        db.AddStopOnPath(stop_name.AsString(), path);
+    }
+    db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
+}
+
+void jsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+    auto paths = request_handler.GetBusesByStop(data.at("name").AsString());
+    if (paths){
+        json::Array path_vec{};
+        for (const auto &path: *paths){
+            path_vec.push_back(path->path_name_);
+        }
+        response["buses"] = path_vec;
+    } else{
+        response["error_message"] = string("not found");
+    }
+}
+
+void jsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+    auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
+    if (path_stat){
+        response["curvature"] = path_stat->curvature;
+        response["route_length"] = static_cast<int>(path_stat->route_length);
+        response["stop_count"] = static_cast<int>(path_stat->stop_count);
+        response["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
+    } else{
+        response["error_message"] = string("not found");
     }
 }
 
@@ -79,39 +112,21 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, tc::
     auto stat_requests = doc.GetRoot().AsMap().at("stat_requests").AsArray();
     RequestHandler request_handler(catalogue);
     json::Array output;
-    json::Dict response;
-
     for (const auto &base_request: stat_requests){
         const auto data = base_request.AsMap();
+        json::Dict response;
         response["request_id"] = data.at("id").AsInt();
         const auto &type_data = data.at("type").AsString();
         if (type_data == "Stop"){
-            auto paths = request_handler.GetBusesByStop(data.at("name").AsString());
-            if (paths){
-                json::Array path_vec{};
-                for (const auto &path: *paths){
-                    path_vec.push_back(path->path_name_);
-                }
-                response["buses"] = path_vec;
-            }else{
-                response["error_message"] = string("not found");
-            }
+            ProcessStopRequest(data, request_handler, response);
         } else if (type_data == "Bus"){
-            auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
-            if (path_stat){
-                response["curvature"] = path_stat->curvature;
-                response["route_length"] = static_cast<int>(path_stat->route_length);
-                response["stop_count"] = static_cast<int>(path_stat->stop_count);
-                response["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
-            }else{
-                response["error_message"] = string("not found");
-            }
+            ProcessBusRequest(data, request_handler, response);
         }
         output.push_back(response);
-        response.clear();
     }
     return Document(output);
 }
+
 
 
 
