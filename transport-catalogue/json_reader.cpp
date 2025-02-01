@@ -70,6 +70,7 @@ void jsonReader::LoadDataFromDocumentToDB(const json::Document &doc, tc::Transpo
             for (const auto &stop_name: data.at("stops").AsArray()){
                 db.AddStopOnPath(stop_name.AsString(), path);
             }
+            db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
         }
     }
 }

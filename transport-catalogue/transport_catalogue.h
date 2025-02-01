@@ -40,6 +40,7 @@ namespace tc{
         std::shared_ptr<Stop> &
         AddStop(std::string stop_name, const geo::Coordinates &coordinates, const StopDistanceMap &stops_distances);
         std::shared_ptr<Path> & AddPath(std::string path_name);
+        void SetPathLooped(Path &path, bool is_looped);
         [[nodiscard]] Path::Distance GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept;
         static size_t GetCountUniqueStopsOnPath(const Path &path);
         static size_t GetCountAllStopsOnPath(const Path &path);

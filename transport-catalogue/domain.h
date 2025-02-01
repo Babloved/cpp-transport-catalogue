@@ -31,6 +31,7 @@ struct Path{
         Distance &operator+=(const Distance &oth);
     };
 
+
     explicit Path(std::string path_name) : path_name_(std::move(path_name)){}
 
 
@@ -38,6 +39,7 @@ struct Path{
     std::deque<std::string_view> ordered_stops_;
     //Хэш словарь с доступными остановками на пути
     std::unordered_set<std::string_view> stops_on_path_;
+    bool path_looped_{false};
 };
 
 

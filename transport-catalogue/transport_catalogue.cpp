@@ -89,7 +89,7 @@ size_t TransportCatalogue::GetCountAllStopsOnPath(const Path &path){
 }
 
 bool TransportCatalogue::IsPathLooped(const Path &path){
-    return path.ordered_stops_.front() == path.ordered_stops_.back();
+    return path.path_looped_;
 }
 
 Path::Distance &Path::Distance::operator+=(const Path::Distance &oth){
@@ -122,6 +122,10 @@ Path::Distance TransportCatalogue::CalculateFullPathLength(const Path &path) con
         total_distance += CalculatePathLength(path.ordered_stops_.rbegin(), path.ordered_stops_.rend());
     }
     return total_distance;
+}
+
+void TransportCatalogue::SetPathLooped(Path &path, bool is_looped){
+    path.path_looped_ = is_looped;
 }
 
 
