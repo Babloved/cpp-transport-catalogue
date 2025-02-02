@@ -8,6 +8,7 @@
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <set>
 
 namespace renderer{
     inline const double EPSILON = 1e-6;
@@ -99,7 +100,10 @@ namespace renderer{
 
         explicit MapRenderer(RenderSettings settings) : settings_(std::move(settings)){};
         [[nodiscard]] const RenderSettings &GetRenderSettings() const;
-        [[nodiscard]] svg::Polyline RenderPath(const Path &path, const SphereProjector &proj, const svg::Color &color) const;
+        [[nodiscard]] svg::Polyline RenderPathLine(const Path &path, const SphereProjector &proj, const svg::Color &color) const;
+        [[nodiscard]] std::vector<svg::Text> RenderPathName(const Path &path, const SphereProjector &proj, const svg::Color &fill_color) const;
+        [[nodiscard]] svg::Circle
+        RenderStopCircle(const std::shared_ptr<Stop> &stop, const SphereProjector &proj) const;
     private:
         RenderSettings settings_;
     };

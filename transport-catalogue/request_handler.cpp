@@ -33,14 +33,35 @@ svg::Document RequestHandler::RenderMap() const{
     }
     auto &settings = renderer_.GetRenderSettings();
     renderer::SphereProjector proj(all_paths_coordinates.begin(), all_paths_coordinates.end(),
-                                       settings.width_,
-                                       settings.height_,
-                                       settings.padding_);
+                                   settings.width_,
+                                   settings.height_,
+                                   settings.padding_);
     auto &color_palette = renderer_.GetRenderSettings().color_palette_;
     size_t index{0};
     for (const auto &path: db_.GetSortedAllPaths()){
-        doc.Add(renderer_.RenderPath(*path, proj, color_palette.at(index%color_palette.size())));
+        doc.Add(renderer_.RenderPathLine(*path, proj, color_palette.at(index % color_palette.size())));
         index++;
+    }
+    index = 0;
+    for (const auto &path: db_.GetSortedAllPaths()){
+        auto texts = renderer_.RenderPathName(*path, proj, color_palette.at(index % color_palette.size()));
+        for (const auto &text: texts){
+            doc.Add(text);
+        }
+        index++;
+    }
+    auto stops = db_.GetSortedAllStops();
+    //Удаляем остановки с без маршрутов
+    auto it_curr = stops.begin();
+    while (it_curr != stops.end()){
+        if ((**it_curr).paths_on_stop_.empty()){
+            stops.erase(it_curr);
+        }else{
+            ++it_curr;
+        }
+    }
+    for (const auto &stop: stops){
+        doc.Add(renderer_.RenderStopCircle(stop, proj));
     }
     return doc;
 }

@@ -53,3 +53,8 @@ struct Stop{
     //Словарь доступных маршрутов через останоку
     std::set<std::shared_ptr<Path>, PathComp> paths_on_stop_;
 };
+struct StopComp{
+    bool operator()(const std::shared_ptr<Stop> &lhs, const std::shared_ptr<Stop> &rhs) const{
+        return lhs->stop_name_ < rhs->stop_name_;
+    }
+};

@@ -89,16 +89,17 @@ namespace svg{
         //Hello, <UserName>. Would you like some "M&M's"?
         //<text>Hello, &lt;UserName&gt;. Would you like some &quot;M&amp;M&apos;s&quot;?</text>
         auto &out = context.out;
-        out << "<text" << R"( x=")" << pos_.x << R"(" y=")" << pos_.y << R"(" dx=")" << offset_.x << R"(" dy=")"
-            << offset_.y
-            << R"(" font-size=")" << font_size_ << R"(")";
+        out << "<text" ;
+        RenderAttrs(out);
+        out << R"( x=")" << pos_.x << R"(" y=")" << pos_.y
+                     << R"(" dx=")" << offset_.x << R"(" dy=")" << offset_.y
+                     << R"(" font-size=")" << font_size_ << R"(")";
         if (font_family_){
             out << R"( font-family=")" << font_family_->data() << R"(")";
         }
         if (font_weight_){
             out << R"( font-weight=")" << font_weight_->data() << R"(")";
         }
-        RenderAttrs(out);
         out << ">";
         for (const auto &ch: data_){
             switch (ch){

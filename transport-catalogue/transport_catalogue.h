@@ -45,7 +45,8 @@ namespace tc{
         static size_t GetCountUniqueStopsOnPath(const Path &path);
         static size_t GetCountAllStopsOnPath(const Path &path);
         std::set <std::shared_ptr<Path>, PathComp> GetSortedAllPaths() const;
-        void AddStopOnPath(const std::string &stop_name, const std::shared_ptr <Path> path);
+        std::set<std::shared_ptr<Stop>, StopComp> GetSortedAllStops() const;
+        void AddStopOnPath(const std::string &stop_name, std::shared_ptr <Path> path);
         static bool IsPathLooped(const Path &path);
         Path::Distance CalculateFullPathLength(const Path &path) const;
     private:
@@ -61,7 +62,6 @@ namespace tc{
         //Хэш-таблица связанных остановок с растоянием между ними
         std::unordered_map<std::pair<const Stop *, const Stop *>, double,
                 PairHash<Stop, Stop>, PairEqual<Stop, Stop>> stop_distances_;
-
     };
 
 }

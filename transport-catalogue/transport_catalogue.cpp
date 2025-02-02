@@ -133,4 +133,6 @@ set<std::shared_ptr<Path>, PathComp> TransportCatalogue::GetSortedAllPaths() con
     return {all_path_.begin(),all_path_.end()};
 }
 
-
+set<std::shared_ptr<Stop>, StopComp> TransportCatalogue::GetSortedAllStops() const{
+    return {all_stops_.begin(),all_stops_.end()};
+}
