@@ -165,10 +165,10 @@ void jsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::M
     render_settings.stop_radius_ = doc_render_settings.at("stop_radius").AsDouble();
     render_settings.bus_label_font_size_ = doc_render_settings.at("bus_label_font_size").AsInt();
     auto &bus_label_offset = doc_render_settings.at("bus_label_offset").AsArray();
-    render_settings.bus_label_offset_ = {bus_label_offset.front().AsInt(), bus_label_offset.back().AsInt()};
+    render_settings.bus_label_offset_ = {bus_label_offset.front().AsDouble(), bus_label_offset.back().AsDouble()};
     render_settings.stop_label_font_size_ = doc_render_settings.at("stop_label_font_size").AsInt();
     auto &stop_label_offset = doc_render_settings.at("stop_label_offset").AsArray();
-    render_settings.stop_label_offset_ = {stop_label_offset.front().AsInt(), stop_label_offset.back().AsInt()};
+    render_settings.stop_label_offset_ = {stop_label_offset.front().AsDouble(), stop_label_offset.back().AsDouble()};
     render_settings.underlayer_color_ = GetColorFromNode(doc_render_settings.at("underlayer_color"));
     render_settings.underlayer_width_ = doc_render_settings.at("underlayer_width").AsDouble();
     auto &color_palette = doc_render_settings.at("color_palette").AsArray();
