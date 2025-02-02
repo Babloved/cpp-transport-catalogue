@@ -45,8 +45,8 @@ svg::Document RequestHandler::RenderMap() const{
     index = 0;
     for (const auto &path: db_.GetSortedAllPaths()){
         auto texts = renderer_.RenderPathName(*path, proj, color_palette.at(index % color_palette.size()));
-        for (const auto &text: texts){
-            doc.Add(text);
+        for (auto &text: texts){
+            doc.Add(std::move(text));
         }
         index++;
     }
@@ -61,7 +61,13 @@ svg::Document RequestHandler::RenderMap() const{
         }
     }
     for (const auto &stop: stops){
-        doc.Add(renderer_.RenderStopCircle(stop, proj));
+        doc.Add(renderer_.RenderStopCircle(*stop, proj));
+    }
+    for (const auto &stop: stops){
+        auto texts = renderer_.RenderStopsName(*stop, proj);
+        for (auto &text: texts){
+            doc.Add(std::move(text));
+        }
     }
     return doc;
 }
