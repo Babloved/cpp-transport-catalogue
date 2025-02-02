@@ -80,6 +80,15 @@ namespace svg{
             if (stroke_color_){
                 out << R"( stroke=")" << *stroke_color_ << R"(")";
             }
+            if (stroke_width_){
+                out << R"( stroke-width=")" << *stroke_width_<< R"(")";
+            }
+            if (stroke_line_cap_){
+                out << R"( stroke-linecap=")" << *stroke_line_cap_ << R"(")";
+            }
+            if (stroke_line_join_){
+                out << R"( stroke-linejoin=")" << *stroke_line_join_<< R"(")";
+            }
         }
 
     private:

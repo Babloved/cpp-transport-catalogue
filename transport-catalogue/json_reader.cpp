@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include "map_renderer.h"
 
 using namespace std;
 using namespace json;
@@ -64,7 +65,6 @@ void jsonReader::LoadStatRequestsFromDocumentToDB(const json::Document &doc, tc:
     }
 }
 
-
 void jsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
     tc::TransportCatalogue::StopDistanceMap stop_distance_map;
     for (const auto &[stop_name, distance]: data.at("road_distances").AsMap()){
@@ -109,9 +109,8 @@ void jsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &reque
     }
 }
 
-json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, tc::TransportCatalogue &catalogue){
+json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler){
     auto stat_requests = doc.GetRoot().AsMap().at("stat_requests").AsArray();
-    RequestHandler request_handler(catalogue);
     json::Array output;
     for (const auto &base_request: stat_requests){
         const auto data = base_request.AsMap();
@@ -127,9 +126,60 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, tc::
     }
     return Document(output);
 }
-void jsonReader::LoadRenderSettingsFromDocument(const json::Document &doc, tc::TransportCatalogue &db){
-    //TODO Добавить загрузчк настроек
+
+svg::Color GetColorFromNode(const json::Node &color_node){
+    svg::Color color;
+    if (color_node.IsArray()){
+        auto &color_array = color_node.AsArray();
+        switch (color_array.size()){
+            case 3:
+                color = "rgb(" + to_string(color_array.at(0).AsInt()) + ","
+                        + to_string(color_array.at(1).AsInt()) + ","
+                        + to_string(color_array.at(2).AsInt()) + ")";
+                break;
+            case 4:
+                color = "rgba(" + to_string(color_array.at(0).AsInt()) + ","
+                        + to_string(color_array.at(1).AsInt()) + ","
+                        + to_string(color_array.at(2).AsInt()) + ","
+                        + to_string(color_array.at(3).AsDouble()) + ")";
+                break;
+            default:
+                throw std::logic_error("The number of color channels is not correct: " + std::to_string(color_array.size()));
+
+        }
+    } else if (color_node.IsString()){
+        color = color_node.AsString();
+    } else{
+        throw std::logic_error("Node not a type color");
+    }
+    return color;
 }
+
+void jsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer){
+    auto &doc_render_settings = doc.GetRoot().AsMap().at("render_settings").AsMap();
+    renderer::MapRenderer::RenderSettings render_settings;
+    render_settings.width_ = doc_render_settings.at("width").AsDouble();
+    render_settings.height_ = doc_render_settings.at("height").AsDouble();
+    render_settings.padding_ = doc_render_settings.at("padding").AsDouble();
+    render_settings.line_width_ = doc_render_settings.at("line_width").AsDouble();
+    render_settings.stop_radius_ = doc_render_settings.at("stop_radius").AsDouble();
+    render_settings.bus_label_font_size_ = doc_render_settings.at("bus_label_font_size").AsInt();
+    auto &bus_label_offset = doc_render_settings.at("bus_label_offset").AsArray();
+    render_settings.bus_label_offset_ = {bus_label_offset.front().AsInt(), bus_label_offset.back().AsInt()};
+    render_settings.stop_label_font_size_ = doc_render_settings.at("stop_label_font_size").AsInt();
+    auto &stop_label_offset = doc_render_settings.at("stop_label_offset").AsArray();
+    render_settings.stop_label_offset_ = {stop_label_offset.front().AsInt(), stop_label_offset.back().AsInt()};
+    render_settings.underlayer_color_ = GetColorFromNode(doc_render_settings.at("underlayer_color"));
+    render_settings.underlayer_width_ = doc_render_settings.at("underlayer_width").AsDouble();
+    auto &color_palette = doc_render_settings.at("color_palette").AsArray();
+    for (const auto &color: color_palette){
+        render_settings.color_palette_.push_back(GetColorFromNode(color));
+    }
+    renderer = renderer::MapRenderer(render_settings);
+
+}
+
+
 
 
 

@@ -1,59 +1,29 @@
 #include "map_renderer.h"
 // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
 
+using namespace std;
 
 bool renderer::IsZero(double value){
-return std::abs(value) < renderer::EPSILON;
+    return std::abs(value) < renderer::EPSILON;
 }
 
-template<typename PointInputIt>
-renderer::SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_end,
-                                           double max_width, double max_height, double padding)
-        : padding_(padding) //
-{
-    // Если точки поверхности сферы не заданы, вычислять нечего
-    if (points_begin == points_end){
-        return;
+svg::Polyline renderer::MapRenderer::RenderPath(const Path &path, const SphereProjector &proj, const svg::Color &color) const{
+    svg::Polyline polyline;
+    for (const auto &stop: path.ordered_stops_){
+        polyline.AddPoint(proj(stop->coordinates_));
     }
-
-    // Находим точки с минимальной и максимальной долготой
-    const auto [left_it, right_it] = std::minmax_element(
-            points_begin, points_end,
-            [](auto lhs, auto rhs){ return lhs.lng < rhs.lng; });
-    min_lon_ = left_it->lng;
-    const double max_lon = right_it->lng;
-
-    // Находим точки с минимальной и максимальной широтой
-    const auto [bottom_it, top_it] = std::minmax_element(
-            points_begin, points_end,
-            [](auto lhs, auto rhs){ return lhs.lat < rhs.lat; });
-    const double min_lat = bottom_it->lat;
-    max_lat_ = top_it->lat;
-
-    // Вычисляем коэффициент масштабирования вдоль координаты x
-    std::optional<double> width_zoom;
-    if (!IsZero(max_lon - min_lon_)){
-        width_zoom = (max_width - 2 * padding) / (max_lon - min_lon_);
+    if (!path.path_looped_){
+        polyline.AddPoint(proj(path.ordered_stops_.front()->coordinates_));
     }
-
-    // Вычисляем коэффициент масштабирования вдоль координаты y
-    std::optional<double> height_zoom;
-    if (!IsZero(max_lat_ - min_lat)){
-        height_zoom = (max_height - 2 * padding) / (max_lat_ - min_lat);
-    }
-    if (width_zoom && height_zoom){
-        // Коэффициенты масштабирования по ширине и высоте ненулевые,
-        // берём минимальный из них
-        zoom_coeff_ = std::min(*width_zoom, *height_zoom);
-    } else if (width_zoom){
-        // Коэффициент масштабирования по ширине ненулевой, используем его
-        zoom_coeff_ = *width_zoom;
-    } else if (height_zoom){
-        // Коэффициент масштабирования по высоте ненулевой, используем его
-        zoom_coeff_ = *height_zoom;
-    }
+    polyline
+            .SetStrokeColor(color)
+            .SetFillColor(svg::NoneColor)
+            .SetStrokeWidth(settings_.line_width_)
+            .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+            .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+    return polyline;
 }
 
-svg::Document renderer::MapRenderer::RenderDocument(){
-    return svg::Document();
+const renderer::MapRenderer::RenderSettings &renderer::MapRenderer::GetRenderSettings() const{
+    return settings_;
 }

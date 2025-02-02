@@ -124,12 +124,13 @@ Path::Distance TransportCatalogue::CalculateFullPathLength(const Path &path) con
     return total_distance;
 }
 
+
 void TransportCatalogue::SetPathLooped(Path &path, bool is_looped){
     path.path_looped_ = is_looped;
 }
 
-std::deque<std::shared_ptr<Path>> TransportCatalogue::GetAllPath(){
-    return all_path_;
+set<std::shared_ptr<Path>, PathComp> TransportCatalogue::GetSortedAllPaths() const{
+    return {all_path_.begin(),all_path_.end()};
 }
 
 

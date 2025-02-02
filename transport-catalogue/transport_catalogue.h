@@ -44,7 +44,7 @@ namespace tc{
         [[nodiscard]] Path::Distance GetDistanceBetweenStops(const Stop *stop_src, const Stop *stop_dst) const noexcept;
         static size_t GetCountUniqueStopsOnPath(const Path &path);
         static size_t GetCountAllStopsOnPath(const Path &path);
-        std::deque<std::shared_ptr<Path>> GetAllPath();
+        std::set <std::shared_ptr<Path>, PathComp> GetSortedAllPaths() const;
         void AddStopOnPath(const std::string &stop_name, const std::shared_ptr <Path> path);
         static bool IsPathLooped(const Path &path);
         Path::Distance CalculateFullPathLength(const Path &path) const;
