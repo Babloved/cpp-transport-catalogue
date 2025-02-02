@@ -1,15 +1,13 @@
 #pragma once
-
-#include <cstdint>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <cstdint>
+#include <iostream>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace svg{
     using Color = std::string;
@@ -81,13 +79,13 @@ namespace svg{
                 out << R"( stroke=")" << *stroke_color_ << R"(")";
             }
             if (stroke_width_){
-                out << R"( stroke-width=")" << *stroke_width_<< R"(")";
+                out << R"( stroke-width=")" << *stroke_width_ << R"(")";
             }
             if (stroke_line_cap_){
                 out << R"( stroke-linecap=")" << *stroke_line_cap_ << R"(")";
             }
             if (stroke_line_join_){
-                out << R"( stroke-linejoin=")" << *stroke_line_join_<< R"(")";
+                out << R"( stroke-linejoin=")" << *stroke_line_join_ << R"(")";
             }
         }
 
@@ -246,7 +244,6 @@ namespace shapes{
 
         // Реализует метод Draw интерфейса svg::Drawable
         void Draw(svg::ObjectContainer &container) const override;
-
     private:
         svg::Point p1_, p2_, p3_;
     };

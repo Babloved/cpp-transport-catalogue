@@ -2,6 +2,7 @@
 #include <list>
 
 using namespace std;
+using namespace svg;
 
 optional<PathStat> RequestHandler::GetPathStat(const string_view &path_name) const{
     auto p_path = db_.GetPathByName(path_name);
@@ -15,7 +16,7 @@ optional<PathStat> RequestHandler::GetPathStat(const string_view &path_name) con
     return {nullopt};
 }
 
-std::set<std::shared_ptr<Path>, PathComp> *RequestHandler::GetBusesByStop(const std::string_view &stop_name) const{
+set<shared_ptr<domain::Path>, domain::PathComp> *RequestHandler::GetBusesByStop(const string_view &stop_name) const{
     auto p_stop = db_.GetStopByName(stop_name);
     if (p_stop){
         return &p_stop->paths_on_stop_;
@@ -23,12 +24,11 @@ std::set<std::shared_ptr<Path>, PathComp> *RequestHandler::GetBusesByStop(const 
     return nullptr;
 }
 
-svg::Document RequestHandler::RenderMap() const{
-    svg::Document doc;
+Document RequestHandler::RenderMap() const{
+    Document doc;
     vector<geo::Coordinates> all_paths_coordinates;
     auto paths = db_.GetSortedAllPaths();
     for (const auto &path: paths){
-
         for (const auto &stop: path->stops_on_path_){
             all_paths_coordinates.push_back(stop->coordinates_);
         }
@@ -58,7 +58,7 @@ svg::Document RequestHandler::RenderMap() const{
     while (it_curr != stops.end()){
         if ((**it_curr).paths_on_stop_.empty()){
             it_curr = stops.erase(it_curr);
-        }else{
+        } else{
             ++it_curr;
         }
     }
@@ -66,7 +66,6 @@ svg::Document RequestHandler::RenderMap() const{
         doc.Add(renderer_.RenderStopCircle(*stop, proj));
     }
     for (const auto &stop: stops){
-
         auto texts = renderer_.RenderStopsName(*stop, proj);
         for (auto &text: texts){
             doc.Add(text);
@@ -74,4 +73,3 @@ svg::Document RequestHandler::RenderMap() const{
     }
     return doc;
 }
-

@@ -1,8 +1,9 @@
-#include "transport_catalogue.h"
 #include "domain.h"
+#include "transport_catalogue.h"
 #include <cassert>
 
 using namespace std;
+using namespace domain;
 using namespace tc;
 
 shared_ptr<Stop> &TransportCatalogue::
@@ -51,7 +52,7 @@ shared_ptr<Path> &TransportCatalogue::AddPath(string path_name){
     return paths_names_.insert({path->path_name_, {path}}).first->second;
 }
 
-std::shared_ptr<Stop>
+shared_ptr<Stop>
 TransportCatalogue::GetStopByName(string_view stop_name) const{
     auto it_stop = stops_names_.find(stop_name);
     if (it_stop == stops_names_.end()){
@@ -60,7 +61,7 @@ TransportCatalogue::GetStopByName(string_view stop_name) const{
     return it_stop->second;
 }
 
-std::shared_ptr<Path> TransportCatalogue::GetPathByName(string_view path_name) const{
+shared_ptr<Path> TransportCatalogue::GetPathByName(string_view path_name) const{
     auto it_found_path = paths_names_.find(path_name);
     if (it_found_path == paths_names_.end()){
         return nullptr;
@@ -68,7 +69,7 @@ std::shared_ptr<Path> TransportCatalogue::GetPathByName(string_view path_name) c
     return it_found_path->second;
 }
 
-void TransportCatalogue::AddStopOnPath(const std::string &stop_name, const shared_ptr<Path> path){
+void TransportCatalogue::AddStopOnPath(const string &stop_name, const shared_ptr<Path> path){
     static geo::Coordinates DummyCoordinate;
     auto &stop = this->AddStop(stop_name, DummyCoordinate, {});
     stop->paths_on_stop_.insert(path);
@@ -83,7 +84,7 @@ size_t TransportCatalogue::GetCountUniqueStopsOnPath(const Path &path){
 size_t TransportCatalogue::GetCountAllStopsOnPath(const Path &path){
     size_t path_size{path.ordered_stops_.size()};
     if (!IsPathLooped(path)){
-        path_size = path_size  * 2 - 1;
+        path_size = path_size * 2 - 1;
     }
     return path_size;
 }
@@ -124,15 +125,14 @@ Path::Distance TransportCatalogue::CalculateFullPathLength(const Path &path) con
     return total_distance;
 }
 
-
 void TransportCatalogue::SetPathLooped(Path &path, bool is_looped){
     path.path_looped_ = is_looped;
 }
 
-set<std::shared_ptr<Path>, PathComp> TransportCatalogue::GetSortedAllPaths() const{
-    return {all_path_.begin(),all_path_.end()};
+set<shared_ptr<Path>, PathComp> TransportCatalogue::GetSortedAllPaths() const{
+    return {all_path_.begin(), all_path_.end()};
 }
 
-set<std::shared_ptr<Stop>, StopComp> TransportCatalogue::GetSortedAllStops() const{
-    return {all_stops_.begin(),all_stops_.end()};
+set<shared_ptr<Stop>, StopComp> TransportCatalogue::GetSortedAllStops() const{
+    return {all_stops_.begin(), all_stops_.end()};
 }

@@ -1,14 +1,15 @@
-#include <iomanip>
 #include "svg.h"
+#include <iomanip>
 
-using namespace std::literals;
+using namespace std;
+using namespace literals;
 namespace svg{
     void Object::Render(const RenderContext &context) const{
         context.RenderIndent();
 
         // Делегируем вывод тега своим подклассам
         RenderObject(context);
-        context.out << std::endl;
+        context.out << endl;
     }
 
 // ---------- Circle ------------------
@@ -70,17 +71,17 @@ namespace svg{
         return *this;
     }
 
-    Text &Text::SetFontFamily(std::string font_family){
+    Text &Text::SetFontFamily(string font_family){
         font_family_ = std::move(font_family);
         return *this;
     }
 
-    Text &Text::SetFontWeight(std::string font_weight){
+    Text &Text::SetFontWeight(string font_weight){
         font_weight_ = std::move(font_weight);
         return *this;
     }
 
-    Text &Text::SetData(std::string data){
+    Text &Text::SetData(string data){
         data_ = std::move(data);
         return *this;
     }
@@ -89,11 +90,11 @@ namespace svg{
         //Hello, <UserName>. Would you like some "M&M's"?
         //<text>Hello, &lt;UserName&gt;. Would you like some &quot;M&amp;M&apos;s&quot;?</text>
         auto &out = context.out;
-        out << "<text" ;
+        out << "<text";
         RenderAttrs(out);
         out << R"( x=")" << pos_.x << R"(" y=")" << pos_.y
-                     << R"(" dx=")" << offset_.x << R"(" dy=")" << offset_.y
-                     << R"(" font-size=")" << font_size_ << R"(")";
+            << R"(" dx=")" << offset_.x << R"(" dy=")" << offset_.y
+            << R"(" font-size=")" << font_size_ << R"(")";
         if (font_family_){
             out << R"( font-family=")" << font_family_->data() << R"(")";
         }
@@ -127,13 +128,13 @@ namespace svg{
     }
 
 // ---------- Document ------------------
-    void Document::AddPtr(std::unique_ptr<Object> &&obj){
+    void Document::AddPtr(unique_ptr<Object> &&obj){
         objects_.push_back(std::move(obj));
     }
 
-    void Document::Render(std::ostream &out) const{
-        out << R"(<?xml version="1.0" encoding="UTF-8" ?>)" << std::endl;
-        out << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1">)" << std::endl;
+    void Document::Render(ostream &out) const{
+        out << R"(<?xml version="1.0" encoding="UTF-8" ?>)" << endl;
+        out << R"(<svg xmlns="http://www.w3.org/2000/svg" version="1.1">)" << endl;
         for (const auto &object: objects_){
             object->Render(RenderContext(out));
         }
@@ -141,7 +142,7 @@ namespace svg{
     }
 // ---------- StrokeLineCap ------------------
 
-    std::ostream &operator<<(std::ostream &out, StrokeLineCap line_cap){
+    ostream &operator<<(ostream &out, StrokeLineCap line_cap){
         switch (line_cap){
             case StrokeLineCap::BUTT:
                 out << "butt";
@@ -157,7 +158,7 @@ namespace svg{
     }
 
 // ---------- StrokeLineJoin ------------------
-    std::ostream &operator<<(std::ostream &out, StrokeLineJoin line_join){
+    ostream &operator<<(ostream &out, StrokeLineJoin line_join){
         switch (line_join){
             case StrokeLineJoin::ARCS:
                 out << "arcs";

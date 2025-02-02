@@ -1,14 +1,14 @@
 #include "map_renderer.h"
-// points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
 
 using namespace std;
-
+using namespace svg;
+using namespace domain;
 bool renderer::IsZero(double value){
     return std::abs(value) < renderer::EPSILON;
 }
 
-svg::Polyline renderer::MapRenderer::RenderPathLine(const Path &path, const SphereProjector &proj, const svg::Color &color) const{
-    svg::Polyline polyline;
+Polyline renderer::MapRenderer::RenderPathLine(const Path &path, const SphereProjector &proj, const Color &color) const{
+    Polyline polyline;
     for (const auto &stop: path.ordered_stops_){
         polyline.AddPoint(proj(stop->coordinates_));
     }
@@ -19,24 +19,24 @@ svg::Polyline renderer::MapRenderer::RenderPathLine(const Path &path, const Sphe
     }
     polyline
             .SetStrokeColor(color)
-            .SetFillColor(svg::NoneColor)
+            .SetFillColor(NoneColor)
             .SetStrokeWidth(settings_.line_width_)
-            .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-            .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+            .SetStrokeLineCap(StrokeLineCap::ROUND)
+            .SetStrokeLineJoin(StrokeLineJoin::ROUND);
     return polyline;
 }
 
-std::vector<svg::Text>
-renderer::MapRenderer::RenderPathName(const Path &path, const SphereProjector &proj, const svg::Color &fill_color) const{
-    std::vector<svg::Text> texts;
-    svg::Text first_stop;
+std::vector<Text>
+renderer::MapRenderer::RenderPathName(const Path &path, const SphereProjector &proj, const Color &fill_color) const{
+    std::vector<Text> texts;
+    Text first_stop;
     first_stop.SetPosition(proj(path.ordered_stops_.front()->coordinates_));
     //Основной текст
     texts.push_back(std::move(first_stop));
     //Подложка
     texts.push_back(texts.back());
     if (!path.path_looped_ && path.ordered_stops_.front() != path.ordered_stops_.back()){
-        svg::Text last_stop;
+        Text last_stop;
         last_stop.SetPosition(proj(path.ordered_stops_.back()->coordinates_));
         //Основной текст для конечной остановки
         texts.push_back(std::move(last_stop));
@@ -54,8 +54,8 @@ renderer::MapRenderer::RenderPathName(const Path &path, const SphereProjector &p
         texts.at(i).SetFillColor(settings_.underlayer_color_)
                 .SetStrokeColor(settings_.underlayer_color_)
                 .SetStrokeWidth(settings_.underlayer_width_)
-                .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-                .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+                .SetStrokeLineCap(StrokeLineCap::ROUND)
+                .SetStrokeLineJoin(StrokeLineJoin::ROUND);
     }
     for (size_t i = 1; i < texts.size(); i += 2){
         texts.at(i).SetFillColor(fill_color);
@@ -63,9 +63,9 @@ renderer::MapRenderer::RenderPathName(const Path &path, const SphereProjector &p
     return texts;
 }
 
-svg::Circle
+Circle
 renderer::MapRenderer::RenderStopCircle(const Stop &stop, const SphereProjector &proj) const{
-    svg::Circle circle;
+    Circle circle;
     circle.SetCenter(proj(stop.coordinates_))
             .SetRadius(settings_.stop_radius_)
             .SetFillColor("white");
@@ -76,10 +76,10 @@ const renderer::MapRenderer::RenderSettings &renderer::MapRenderer::GetRenderSet
     return settings_;
 }
 
-std::vector<svg::Text>
+std::vector<Text>
 renderer::MapRenderer::RenderStopsName(const Stop &stop, const SphereProjector &proj) const{
-    std::vector<svg::Text> texts;
-    svg::Text first_stop;
+    std::vector<Text> texts;
+    Text first_stop;
     first_stop.SetPosition(proj(stop.coordinates_));
     //Основной текст
     texts.push_back(std::move(first_stop));
@@ -94,8 +94,8 @@ renderer::MapRenderer::RenderStopsName(const Stop &stop, const SphereProjector &
     texts.at(0).SetFillColor(settings_.underlayer_color_)
             .SetStrokeColor(settings_.underlayer_color_)
             .SetStrokeWidth(settings_.underlayer_width_)
-            .SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-            .SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+            .SetStrokeLineCap(StrokeLineCap::ROUND)
+            .SetStrokeLineJoin(StrokeLineJoin::ROUND);
     texts.at(1).SetFillColor("black");
     return texts;
 }

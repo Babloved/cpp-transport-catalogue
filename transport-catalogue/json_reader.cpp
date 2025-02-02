@@ -1,31 +1,29 @@
-#include <cassert>
 #include "json.h"
 #include "json_reader.h"
+#include "map_renderer.h"
 #include "request_handler.h"
 #include <array>
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <iomanip>
-#include "map_renderer.h"
 
 using namespace std;
 using namespace json;
 
-json::Document jsonReader::LoadJSON(const std::string &&s){
-    std::istringstream strm(s);
+json::Document jsonReader::LoadJSON(const string &&s){
+    istringstream strm(s);
     return json::Load(strm);
 }
 
-std::string Print(const json::Node &node){
-    std::ostringstream out;
+string Print(const json::Node &node){
+    ostringstream out;
     json::Print(json::Document{node}, out);
     return out.str();
 }
 
-json::Document jsonReader::LoadStreamJSON(std::istream &input){
+json::Document jsonReader::LoadStreamJSON(istream &input){
     long long bracket_counter{0};
-    std::string json_raw_string;
+    string json_raw_string;
     // Проверяем первый символ
     char ch;
     input.get(ch);
@@ -33,7 +31,7 @@ json::Document jsonReader::LoadStreamJSON(std::istream &input){
         ++bracket_counter;
         json_raw_string.push_back(ch);
     } else{
-        throw std::runtime_error("Incorrect JSON format, first char not a '{'");
+        throw runtime_error("Incorrect JSON format, first char not a '{'");
     }
     // Чтение данных из потока
     while (bracket_counter > 0){
@@ -154,13 +152,13 @@ svg::Color GetColorFromNode(const json::Node &color_node){
                           << color_array.at(3).AsDouble() << ")";
                 break;
             default:
-                throw std::logic_error("The number of color channels is not correct: " + std::to_string(color_array.size()));
+                throw logic_error("The number of color channels is not correct: " + to_string(color_array.size()));
         }
         color = oss_color.str();
     } else if (color_node.IsString()){
         color = color_node.AsString();
     } else{
-        throw std::logic_error("Node not a type color");
+        throw logic_error("Node not a type color");
     }
     return color;
 }

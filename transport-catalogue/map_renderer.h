@@ -1,14 +1,14 @@
 #pragma once
 
+#include "domain.h"
 #include "geo.h"
 #include "svg.h"
-#include "domain.h"
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <optional>
-#include <vector>
 #include <set>
+#include <vector>
 
 namespace renderer{
     inline const double EPSILON = 1e-6;
@@ -100,12 +100,12 @@ namespace renderer{
 
         explicit MapRenderer(RenderSettings settings) : settings_(std::move(settings)){};
         [[nodiscard]] const RenderSettings &GetRenderSettings() const;
-        [[nodiscard]] svg::Polyline RenderPathLine(const Path &path, const SphereProjector &proj, const svg::Color &color) const;
+        [[nodiscard]] svg::Polyline RenderPathLine(const domain::Path &path, const SphereProjector &proj, const svg::Color &color) const;
         [[nodiscard]] std::vector<svg::Text>
-        RenderPathName(const Path &path, const SphereProjector &proj, const svg::Color &fill_color) const;
-        [[nodiscard]] svg::Circle RenderStopCircle(const Stop &stop, const SphereProjector &proj) const;
+        RenderPathName(const domain::Path &path, const SphereProjector &proj, const svg::Color &fill_color) const;
+        [[nodiscard]] svg::Circle RenderStopCircle(const domain::Stop &stop, const SphereProjector &proj) const;
         [[nodiscard]] std::vector<svg::Text>
-        RenderStopsName(const Stop &stop, const SphereProjector &proj) const;
+        RenderStopsName(const domain::Stop &stop, const SphereProjector &proj) const;
     private:
         RenderSettings settings_;
     };

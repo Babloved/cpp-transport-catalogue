@@ -1,8 +1,8 @@
 #pragma once
+
 #include <cmath>
 
 namespace geo{
-
     struct Coordinates{
         double lat = NAN;
         double lng = NAN;
@@ -22,4 +22,3 @@ namespace geo{
 
     double ComputeDistance(Coordinates from, Coordinates to);
 }
-
