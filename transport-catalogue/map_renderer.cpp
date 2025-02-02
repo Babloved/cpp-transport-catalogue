@@ -13,7 +13,9 @@ svg::Polyline renderer::MapRenderer::RenderPath(const Path &path, const SpherePr
         polyline.AddPoint(proj(stop->coordinates_));
     }
     if (!path.path_looped_){
-        polyline.AddPoint(proj(path.ordered_stops_.front()->coordinates_));
+        for (auto it = next(path.ordered_stops_.rbegin()); it != path.ordered_stops_.rend(); ++it) {
+            polyline.AddPoint(proj((*it)->coordinates_));
+        }
     }
     polyline
             .SetStrokeColor(color)

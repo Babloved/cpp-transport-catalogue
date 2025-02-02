@@ -1,8 +1,8 @@
+#include <iomanip>
 #include "svg.h"
+
 using namespace std::literals;
 namespace svg{
-
-
     void Object::Render(const RenderContext &context) const{
         context.RenderIndent();
 
@@ -26,7 +26,6 @@ namespace svg{
     void Circle::RenderObject(const RenderContext &context) const{
         auto &out = context.out;
         out << R"(<circle cx=")" << center_.x << R"(" cy=")" << center_.y << R"(" )";
-
         out << R"(r=")" << radius_ << R"(")";
         RenderAttrs(out);
         out << "/>"sv;
@@ -184,6 +183,7 @@ namespace shapes{
     void Triangle::Draw(svg::ObjectContainer &container) const{
         container.Add(svg::Polyline().AddPoint(p1_).AddPoint(p2_).AddPoint(p3_).AddPoint(p1_));
     }
+
 // ---------- Star ------------------
     svg::Polyline Star::CreateStar(svg::Point center, double outer_rad, double inner_rad, int num_rays){
         svg::Polyline polyline;
@@ -202,6 +202,7 @@ namespace shapes{
     void Star::Draw(svg::ObjectContainer &container) const{
         container.Add(CreateStar(center_, outer_rad_, inner_rad_, num_rays_).SetFillColor("red"s).SetStrokeColor("black"s));
     }
+
 // ---------- Snowman ------------------
     void Snowman::Draw(svg::ObjectContainer &container) const{
         container.Add(svg::Circle()
@@ -220,6 +221,5 @@ namespace shapes{
                               .SetFillColor("rgb(240,240,240)")
                               .SetStrokeColor("black"));
     }
-
 
 }// namespace shapes

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <iomanip>
 #include "map_renderer.h"
 
 using namespace std;
@@ -131,22 +132,23 @@ svg::Color GetColorFromNode(const json::Node &color_node){
     svg::Color color;
     if (color_node.IsArray()){
         auto &color_array = color_node.AsArray();
+        ostringstream oss_color;
         switch (color_array.size()){
             case 3:
-                color = "rgb(" + to_string(color_array.at(0).AsInt()) + ","
-                        + to_string(color_array.at(1).AsInt()) + ","
-                        + to_string(color_array.at(2).AsInt()) + ")";
+                oss_color << "rgb(" + to_string(color_array.at(0).AsInt()) << ","
+                          << color_array.at(1).AsInt() << ","
+                          << color_array.at(2).AsInt() << ")";
                 break;
             case 4:
-                color = "rgba(" + to_string(color_array.at(0).AsInt()) + ","
-                        + to_string(color_array.at(1).AsInt()) + ","
-                        + to_string(color_array.at(2).AsInt()) + ","
-                        + to_string(color_array.at(3).AsDouble()) + ")";
+                oss_color << "rgba(" << to_string(color_array.at(0).AsInt()) << ","
+                          << color_array.at(1).AsInt() << ","
+                          << color_array.at(2).AsInt() << ","
+                          << color_array.at(3).AsDouble() << ")";
                 break;
             default:
                 throw std::logic_error("The number of color channels is not correct: " + std::to_string(color_array.size()));
-
         }
+        color = oss_color.str();
     } else if (color_node.IsString()){
         color = color_node.AsString();
     } else{
@@ -178,8 +180,3 @@ void jsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::M
     renderer = renderer::MapRenderer(render_settings);
 
 }
-
-
-
-
-
