@@ -50,7 +50,7 @@ namespace svg{
         }
         out << R"(")";
         RenderAttrs(out);
-        out << R"( />)";
+        out << R"(/>)";
 
     }
 

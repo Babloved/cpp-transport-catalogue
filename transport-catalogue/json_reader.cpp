@@ -53,7 +53,7 @@ json::Document jsonReader::LoadStreamJSON(std::istream &input){
     return jsonReader::LoadJSON(std::move(json_raw_string));
 }
 
-void jsonReader::LoadStatRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
+void jsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
     auto base_requests = doc.GetRoot().AsMap().at("base_requests").AsArray();
     for (const auto &base_request: base_requests){
         const auto data = base_request.AsMap();
@@ -122,10 +122,18 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, Requ
             ProcessStopRequest(data, request_handler, response);
         } else if (type_data == "Bus"){
             ProcessBusRequest(data, request_handler, response);
+        } else if (type_data == "Map"){
+            ProcessMapRequest(request_handler, response);
         }
         output.push_back(response);
     }
     return Document(output);
+}
+
+void jsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Dict &response){
+    ostringstream map;
+    request_handler.RenderMap().Render(map);
+    response["map"] = map.str();
 }
 
 svg::Color GetColorFromNode(const json::Node &color_node){
@@ -178,5 +186,4 @@ void jsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::M
         render_settings.color_palette_.push_back(GetColorFromNode(color));
     }
     renderer = renderer::MapRenderer(render_settings);
-
 }

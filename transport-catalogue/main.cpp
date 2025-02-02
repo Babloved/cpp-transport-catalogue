@@ -13,11 +13,10 @@ int main(){
     auto doc  = jsonReader::LoadStreamJSON(std::cin);
     jsonReader::LoadRenderSettingsFromDocument(doc, map_renderer);
     RequestHandler request_handler(db,map_renderer);
-    jsonReader::LoadStatRequestsFromDocumentToDB(doc, db);
+    jsonReader::LoadBaseRequestsFromDocumentToDB(doc, db);
     auto doc_res = jsonReader::ProcessRequestsFromDocument(doc, request_handler);
-//    Print(doc_res, cout);
-    auto a = request_handler.RenderMap();
-    a.Render(cout);
+    Print(doc_res, cout);
+
 
     return 0;
 }

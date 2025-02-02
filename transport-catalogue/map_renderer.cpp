@@ -35,7 +35,7 @@ renderer::MapRenderer::RenderPathName(const Path &path, const SphereProjector &p
     texts.push_back(std::move(first_stop));
     //Подложка
     texts.push_back(texts.back());
-    if (!path.path_looped_){
+    if (!path.path_looped_ && path.ordered_stops_.front() != path.ordered_stops_.back()){
         svg::Text last_stop;
         last_stop.SetPosition(proj(path.ordered_stops_.back()->coordinates_));
         //Основной текст для конечной остановки

@@ -26,7 +26,9 @@ std::set<std::shared_ptr<Path>, PathComp> *RequestHandler::GetBusesByStop(const 
 svg::Document RequestHandler::RenderMap() const{
     svg::Document doc;
     vector<geo::Coordinates> all_paths_coordinates;
-    for (const auto &path: db_.GetSortedAllPaths()){
+    auto paths = db_.GetSortedAllPaths();
+    for (const auto &path: paths){
+
         for (const auto &stop: path->stops_on_path_){
             all_paths_coordinates.push_back(stop->coordinates_);
         }
@@ -38,24 +40,24 @@ svg::Document RequestHandler::RenderMap() const{
                                    settings.padding_);
     auto &color_palette = renderer_.GetRenderSettings().color_palette_;
     size_t index{0};
-    for (const auto &path: db_.GetSortedAllPaths()){
+    for (const auto &path: paths){
         doc.Add(renderer_.RenderPathLine(*path, proj, color_palette.at(index % color_palette.size())));
         index++;
     }
     index = 0;
-    for (const auto &path: db_.GetSortedAllPaths()){
+    for (const auto &path: paths){
         auto texts = renderer_.RenderPathName(*path, proj, color_palette.at(index % color_palette.size()));
         for (auto &text: texts){
-            doc.Add(std::move(text));
+            doc.Add(text);
         }
         index++;
     }
     auto stops = db_.GetSortedAllStops();
-    //Удаляем остановки с без маршрутов
+    //Удаляем остановки без маршрутов
     auto it_curr = stops.begin();
     while (it_curr != stops.end()){
         if ((**it_curr).paths_on_stop_.empty()){
-            stops.erase(it_curr);
+            it_curr = stops.erase(it_curr);
         }else{
             ++it_curr;
         }
@@ -64,9 +66,10 @@ svg::Document RequestHandler::RenderMap() const{
         doc.Add(renderer_.RenderStopCircle(*stop, proj));
     }
     for (const auto &stop: stops){
+
         auto texts = renderer_.RenderStopsName(*stop, proj);
         for (auto &text: texts){
-            doc.Add(std::move(text));
+            doc.Add(text);
         }
     }
     return doc;
