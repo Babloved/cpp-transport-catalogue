@@ -26,7 +26,8 @@ set<shared_ptr<domain::Path>, domain::PathComp> *RequestHandler::GetBusesByStop(
 
 Document RequestHandler::RenderMap() const{
     Document doc;
-    vector<geo::Coordinates> all_paths_coordinates;
+    vector<geo::Coordinates> all_paths_coordinates;\
+    //Создаем SphereProjector
     auto paths = db_.GetSortedAllPaths();
     for (const auto &path: paths){
         for (const auto &stop: path->stops_on_path_){
@@ -39,11 +40,15 @@ Document RequestHandler::RenderMap() const{
                                    settings.height_,
                                    settings.padding_);
     auto &color_palette = renderer_.GetRenderSettings().color_palette_;
+
+    //Рендерим линии пути
     size_t index{0};
     for (const auto &path: paths){
         doc.Add(renderer_.RenderPathLine(*path, proj, color_palette.at(index % color_palette.size())));
         index++;
     }
+
+    //Рендерим наименования остановки
     index = 0;
     for (const auto &path: paths){
         auto texts = renderer_.RenderPathName(*path, proj, color_palette.at(index % color_palette.size()));
@@ -53,6 +58,7 @@ Document RequestHandler::RenderMap() const{
         index++;
     }
     auto stops = db_.GetSortedAllStops();
+
     //Удаляем остановки без маршрутов
     auto it_curr = stops.begin();
     while (it_curr != stops.end()){
@@ -62,9 +68,13 @@ Document RequestHandler::RenderMap() const{
             ++it_curr;
         }
     }
+
+    //Рендерим круги на остановках
     for (const auto &stop: stops){
         doc.Add(renderer_.RenderStopCircle(*stop, proj));
     }
+
+    //Рендерим название остановок
     for (const auto &stop: stops){
         auto texts = renderer_.RenderStopsName(*stop, proj);
         for (auto &text: texts){

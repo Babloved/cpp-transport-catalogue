@@ -10,7 +10,7 @@
 using namespace std;
 using namespace json;
 
-json::Document jsonReader::LoadJSON(const string &&s){
+json::Document JsonReader::LoadJSON(const string &&s){
     istringstream strm(s);
     return json::Load(strm);
 }
@@ -21,7 +21,7 @@ string Print(const json::Node &node){
     return out.str();
 }
 
-json::Document jsonReader::LoadStreamJSON(istream &input){
+json::Document JsonReader::LoadStreamJSON(istream &input){
     long long bracket_counter{0};
     string json_raw_string;
     // Проверяем первый символ
@@ -48,10 +48,10 @@ json::Document jsonReader::LoadStreamJSON(istream &input){
         }
         json_raw_string.push_back(ch);
     }
-    return jsonReader::LoadJSON(std::move(json_raw_string));
+    return JsonReader::LoadJSON(std::move(json_raw_string));
 }
 
-void jsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
+void JsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
     auto base_requests = doc.GetRoot().AsMap().at("base_requests").AsArray();
     for (const auto &base_request: base_requests){
         const auto data = base_request.AsMap();
@@ -64,7 +64,7 @@ void jsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc:
     }
 }
 
-void jsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+void JsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
     tc::TransportCatalogue::StopDistanceMap stop_distance_map;
     for (const auto &[stop_name, distance]: data.at("road_distances").AsMap()){
         stop_distance_map.insert({stop_name, distance.AsDouble()});
@@ -75,7 +75,7 @@ void jsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalo
     );
 }
 
-void jsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+void JsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
     auto &path = db.AddPath(data.at("name").AsString());
     for (const auto &stop_name: data.at("stops").AsArray()){
         db.AddStopOnPath(stop_name.AsString(), path);
@@ -83,7 +83,7 @@ void jsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalog
     db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
 }
 
-void jsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
     auto paths = request_handler.GetBusesByStop(data.at("name").AsString());
     if (paths){
         json::Array path_vec{};
@@ -96,7 +96,7 @@ void jsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &requ
     }
 }
 
-void jsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
     auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
     if (path_stat){
         response["curvature"] = path_stat->curvature;
@@ -108,7 +108,7 @@ void jsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &reque
     }
 }
 
-json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler){
+json::Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler){
     auto stat_requests = doc.GetRoot().AsMap().at("stat_requests").AsArray();
     json::Array output;
     for (const auto &base_request: stat_requests){
@@ -128,7 +128,7 @@ json::Document jsonReader::ProcessRequestsFromDocument(const Document &doc, Requ
     return Document(output);
 }
 
-void jsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Dict &response){
     ostringstream map;
     request_handler.RenderMap().Render(map);
     response["map"] = map.str();
@@ -163,7 +163,7 @@ svg::Color GetColorFromNode(const json::Node &color_node){
     return color;
 }
 
-void jsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer){
+void JsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer){
     auto &doc_render_settings = doc.GetRoot().AsMap().at("render_settings").AsMap();
     renderer::MapRenderer::RenderSettings render_settings;
     render_settings.width_ = doc_render_settings.at("width").AsDouble();

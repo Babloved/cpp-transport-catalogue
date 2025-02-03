@@ -8,11 +8,11 @@ using namespace std;
 int main(){
     tc::TransportCatalogue db;
     renderer::MapRenderer map_renderer;
-    auto doc = jsonReader::LoadStreamJSON(std::cin);
-    jsonReader::LoadRenderSettingsFromDocument(doc, map_renderer);
+    auto doc = JsonReader::LoadStreamJSON(std::cin);
+    JsonReader::LoadRenderSettingsFromDocument(doc, map_renderer);
     RequestHandler request_handler(db, map_renderer);
-    jsonReader::LoadBaseRequestsFromDocumentToDB(doc, db);
-    auto doc_res = jsonReader::ProcessRequestsFromDocument(doc, request_handler);
+    JsonReader::LoadBaseRequestsFromDocumentToDB(doc, db);
+    auto doc_res = JsonReader::ProcessRequestsFromDocument(doc, request_handler);
     Print(doc_res, cout);
     return 0;
 }

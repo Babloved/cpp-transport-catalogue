@@ -17,41 +17,14 @@ namespace json{
         using runtime_error::runtime_error;
     };
 
-    class Node final{
+    class Node final:private std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>{
     public:
-        using Value = std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string>;
-        Node() = default;
+        using variant::variant;
+        using Value = variant;
 
-        Node(std::nullptr_t)
-                : value_(nullptr){
-        }
-
-        Node(int val)
-                : value_(val){
-        }
-
-        Node(double val)
-                : value_(val){
-        }
-
-        Node(std::string val)
-                : value_(std::move(val)){
-        }
-
-        Node(Array val)
-                : value_(std::move(val)){
-        }
-
-        Node(Dict val)
-                : value_(std::move(val)){
-        }
-
-        Node(bool val)
-                : value_(val){
-        }
 
         [[nodiscard]] bool IsInt() const{
-            return std::holds_alternative<int>(value_);
+            return std::holds_alternative<int>(*this);
         }
 
         [[nodiscard]] int AsInt() const{
@@ -59,11 +32,11 @@ namespace json{
             if (!IsInt()){
                 throw std::logic_error("Not an int"s);
             }
-            return std::get<int>(value_);
+            return std::get<int>(*this);
         }
 
         [[nodiscard]] bool IsPureDouble() const{
-            return std::holds_alternative<double>(value_);
+            return std::holds_alternative<double>(*this);
         }
 
         [[nodiscard]] bool IsDouble() const{
@@ -75,11 +48,11 @@ namespace json{
             if (!IsDouble()){
                 throw std::logic_error("Not a double"s);
             }
-            return IsPureDouble() ? std::get<double>(value_) : AsInt();
+            return IsPureDouble() ? std::get<double>(*this) : AsInt();
         }
 
         [[nodiscard]] bool IsBool() const{
-            return std::holds_alternative<bool>(value_);
+            return std::holds_alternative<bool>(*this);
         }
 
         [[nodiscard]] bool AsBool() const{
@@ -87,15 +60,15 @@ namespace json{
             if (!IsBool()){
                 throw std::logic_error("Not a bool"s);
             }
-            return std::get<bool>(value_);
+            return std::get<bool>(*this);
         }
 
         [[nodiscard]] bool IsNull() const{
-            return std::holds_alternative<std::nullptr_t>(value_);
+            return std::holds_alternative<std::nullptr_t>(*this);
         }
 
         [[nodiscard]] bool IsArray() const{
-            return std::holds_alternative<Array>(value_);
+            return std::holds_alternative<Array>(*this);
         }
 
         [[nodiscard]] const Array &AsArray() const{
@@ -103,11 +76,11 @@ namespace json{
             if (!IsArray()){
                 throw std::logic_error("Not an array"s);
             }
-            return std::get<Array>(value_);
+            return std::get<Array>(*this);
         }
 
         [[nodiscard]] bool IsString() const{
-            return std::holds_alternative<std::string>(value_);
+            return std::holds_alternative<std::string>(*this);
         }
 
         [[nodiscard]] const std::string &AsString() const{
@@ -115,11 +88,11 @@ namespace json{
             if (!IsString()){
                 throw std::logic_error("Not a string"s);
             }
-            return std::get<std::string>(value_);
+            return std::get<std::string>(*this);
         }
 
         [[nodiscard]] bool IsMap() const{
-            return std::holds_alternative<Dict>(value_);
+            return std::holds_alternative<Dict>(*this);
         }
 
         [[nodiscard]] const Dict &AsMap() const{
@@ -127,19 +100,19 @@ namespace json{
             if (!IsMap()){
                 throw std::logic_error("Not a map"s);
             }
-            return std::get<Dict>(value_);
+            return std::get<Dict>(*this);
         }
 
         bool operator==(const Node &rhs) const{
-            return value_ == rhs.value_;
+            return this->GetValue() == this->GetValue();
         }
 
         [[nodiscard]] const Value &GetValue() const{
-            return value_;
+            return *this;
         }
-
-    private:
-        Value value_;
+        [[nodiscard]] Value &GetValue(){
+            return *this;
+        }
     };
 
     inline bool operator!=(const Node &lhs, const Node &rhs){
