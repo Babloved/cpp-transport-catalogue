@@ -48,7 +48,7 @@ Document RequestHandler::RenderMap() const{
         index++;
     }
 
-    //Рендерим наименования остановки
+    // Рендерим наименования остановки
     index = 0;
     for (const auto &path: paths){
         auto texts = renderer_.RenderPathName(*path, proj, color_palette.at(index % color_palette.size()));

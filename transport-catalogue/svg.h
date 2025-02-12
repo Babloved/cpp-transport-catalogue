@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+
 namespace svg{
     using Color = std::string;
     inline const Color NoneColor{"none"};

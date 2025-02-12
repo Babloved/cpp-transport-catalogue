@@ -5,6 +5,8 @@
 #include "transport_catalogue.h"
 #include <string>
 
+#include "json_builder.h"
+
 class JsonReader{
 public:
     [[nodiscard]]static json::Document LoadJSON(const std::string &&s);
@@ -14,9 +16,9 @@ public:
     [[nodiscard]]static json::Document LoadStreamJSON(std::istream &input);
     static json::Document ProcessRequestsFromDocument(const json::Document &doc, RequestHandler &request_handler);
 private:
-    static void ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response);
-    static void ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response);
+    static void ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder & builder);
+    static void ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder & json_builder);
     static void LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db);
     static void LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalogue &db);
-    static void ProcessMapRequest(RequestHandler &request_handler, json::Dict &response);
+    static void ProcessMapRequest(RequestHandler &request_handler, json::Builder &json_builder);
 };

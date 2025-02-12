@@ -52,9 +52,9 @@ json::Document JsonReader::LoadStreamJSON(istream &input){
 }
 
 void JsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
-    auto base_requests = doc.GetRoot().AsMap().at("base_requests").AsArray();
+    auto base_requests = doc.GetRoot().AsDict().at("base_requests").AsArray();
     for (const auto &base_request: base_requests){
-        const auto data = base_request.AsMap();
+        const auto data = base_request.AsDict();
         const auto &type_data = data.at("type").AsString();
         if (type_data == "Stop"){
             LoadStopRequestToDB(data, db);
@@ -66,7 +66,7 @@ void JsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc:
 
 void JsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
     tc::TransportCatalogue::StopDistanceMap stop_distance_map;
-    for (const auto &[stop_name, distance]: data.at("road_distances").AsMap()){
+    for (const auto &[stop_name, distance]: data.at("road_distances").AsDict()){
         stop_distance_map.insert({stop_name, distance.AsDouble()});
     }
     db.AddStop(data.at("name").AsString(),
@@ -83,55 +83,74 @@ void JsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalog
     db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
 }
 
-void JsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder & builder){
     auto paths = request_handler.GetBusesByStop(data.at("name").AsString());
     if (paths){
-        json::Array path_vec{};
+        builder.Key("buses");
+        // json::Array path_vec{};
+        builder.StartArray();
         for (const auto &path: *paths){
-            path_vec.push_back(path->path_name_);
+            builder.Value(path->path_name_);
+            // path_vec.push_back(path->path_name_);
         }
-        response["buses"] = path_vec;
+        builder.EndArray();
+        // builder["buses"] = path_vec;
     } else{
-        response["error_message"] = string("not found");
+        builder.Key("error_message").Value("not found");
+        // builder["error_message"] = string("not found");
     }
 }
 
-void JsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder &json_builder){
     auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
+
     if (path_stat){
-        response["curvature"] = path_stat->curvature;
-        response["route_length"] = static_cast<int>(path_stat->route_length);
-        response["stop_count"] = static_cast<int>(path_stat->stop_count);
-        response["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
+        json_builder.Key("curvature").Value(path_stat->curvature);
+        json_builder.Key("route_length").Value(path_stat->route_length);
+        json_builder.Key("stop_count").Value(static_cast<int>(path_stat->stop_count));
+        json_builder.Key("unique_stop_count").Value(static_cast<int>(path_stat->unique_stop_count));
+        // builder["curvature"] = path_stat->curvature;
+        // builder["route_length"] = static_cast<int>(path_stat->route_length);
+        // builder["stop_count"] = static_cast<int>(path_stat->stop_count);
+        // builder["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
     } else{
-        response["error_message"] = string("not found");
+        json_builder.Key("error_message").Value("not found");
+        // builder["error_message"] = string("not found");
     }
 }
 
 json::Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler){
-    auto stat_requests = doc.GetRoot().AsMap().at("stat_requests").AsArray();
-    json::Array output;
+    json::Builder json_builder;
+    json_builder.StartArray();
+    auto stat_requests = doc.GetRoot().AsDict().at("stat_requests").AsArray();
+    // json::Array output;
     for (const auto &base_request: stat_requests){
-        const auto data = base_request.AsMap();
-        json::Dict response;
-        response["request_id"] = data.at("id").AsInt();
+        json_builder.StartDict();
+        const auto data = base_request.AsDict();
+        // json::Dict response;
+        // response["request_id"] = data.at("id").AsInt();
+        json_builder.Key("request_id").Value(data.at("id").AsInt());
         const auto &type_data = data.at("type").AsString();
         if (type_data == "Stop"){
-            ProcessStopRequest(data, request_handler, response);
+            ProcessStopRequest(data, request_handler, json_builder);
         } else if (type_data == "Bus"){
-            ProcessBusRequest(data, request_handler, response);
+            ProcessBusRequest(data, request_handler, json_builder);
         } else if (type_data == "Map"){
-            ProcessMapRequest(request_handler, response);
+            ProcessMapRequest(request_handler, json_builder);
         }
-        output.push_back(response);
+        json_builder.EndDict();
+        // output.push_back(response);
     }
-    return Document(output);
+    json_builder.EndArray();
+    // return Document(output);
+    return Document(json_builder.Build());
 }
 
-void JsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Dict &response){
+void JsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Builder &json_builder){
     ostringstream map;
     request_handler.RenderMap().Render(map);
-    response["map"] = map.str();
+    // json_builder["map"] = map.str();
+    json_builder.Key("map").Value(map.str());
 }
 
 svg::Color GetColorFromNode(const json::Node &color_node){
@@ -164,7 +183,7 @@ svg::Color GetColorFromNode(const json::Node &color_node){
 }
 
 void JsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer){
-    auto &doc_render_settings = doc.GetRoot().AsMap().at("render_settings").AsMap();
+    auto &doc_render_settings = doc.GetRoot().AsDict().at("render_settings").AsDict();
     renderer::MapRenderer::RenderSettings render_settings;
     render_settings.width_ = doc_render_settings.at("width").AsDouble();
     render_settings.height_ = doc_render_settings.at("height").AsDouble();
