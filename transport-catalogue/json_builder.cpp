@@ -1,7 +1,6 @@
 #include "json_builder.h"
 
 
-
 namespace json {
     Builder::KeyItemContext Builder::Key(std::string &&key) {
         auto &top_node = nodes_stack_.top();
@@ -29,14 +28,14 @@ namespace json {
         } else if (top_node->IsArray()) {
             auto &array = std::get<Array>(top_node->GetValue());
             array.push_back(Node());
-            auto & array_element =  array.back();
+            auto &array_element = array.back();
             array_element.GetValue() = std::move(value);
             if (array_element.IsArray() || array_element.IsDict()) {
                 nodes_stack_.push(&array_element);
             }
-        } else if ( root_node_.IsNull() ) {
+        } else if (root_node_.IsNull()) {
             root_node_.GetValue() = std::move(value);
-        }else {
+        } else {
             throw std::logic_error("Not correct value");
         }
         return *this;
@@ -50,7 +49,7 @@ namespace json {
             Value(Dict());
         } else if (root_node_.IsNull()) {
             top_node->GetValue() = Dict();
-        }else {
+        } else {
             Value(Dict());
         }
         return DictItemContext(*this);
@@ -72,9 +71,9 @@ namespace json {
             Value(Array());
         } else if (top_node->IsDict()) {
             Value(Array());
-        }else if (root_node_.IsNull()) {
+        } else if (root_node_.IsNull()) {
             top_node->GetValue() = Array();
-        }else {
+        } else {
             Value(Array());
         }
         return ArrayItemContext(*this);
@@ -91,44 +90,38 @@ namespace json {
     }
 
     Node Builder::Build() {
-        if ( nodes_stack_.size() > 1) {
-            throw std::logic_error("Stack have element:" );
-        }else if (root_node_.IsNull()) {
+        if (nodes_stack_.size() > 1) {
+            throw std::logic_error("Stack have element:");
+        } else if (root_node_.IsNull()) {
             throw std::logic_error("Empty root on build");
         }
         return root_node_;
     }
 
-    Builder::ItemContext::ItemContext(Builder &builder) : builder_(builder){
+    Builder::ItemContext::ItemContext(Builder &builder) : builder_(builder) {
     }
 
 
-    Builder::KeyItemContext::KeyItemContext(Builder &builder):ItemContext(builder){}
+    Builder::KeyItemContext::KeyItemContext(Builder &builder): ItemContext(builder) {
+    }
 
     Builder::DictItemContext Builder::KeyItemContext::Value(Node::Value value) {
         return DictItemContext(builder_.Value(std::move(value)));
     };
 
 
-    Builder::DictItemContext Builder::KeyItemContext::StartDict() {
+    Builder::DictItemContext Builder::ItemContext::StartDict() {
         return builder_.StartDict();
     }
 
-    Builder::ArrayItemContext Builder::KeyItemContext::StartArray() {
+    Builder::ArrayItemContext Builder::ItemContext::StartArray() {
         return builder_.StartArray();
     }
 
-    Builder::ArrayItemContext::ArrayItemContext(Builder &builder):ItemContext(builder){};
+    Builder::ArrayItemContext::ArrayItemContext(Builder &builder): ItemContext(builder) {
+    };
 
-    Builder::ArrayItemContext Builder::ArrayItemContext::StartArray() {
-        return builder_.StartArray();
-    }
-
-    Builder::DictItemContext Builder::ArrayItemContext::StartDict() {
-        return builder_.StartDict();
-    }
-
-    Builder &Builder::ArrayItemContext::EndArray() {
+    Builder &Builder::ItemContext::EndArray() {
         return builder_.EndArray();
     }
 
@@ -136,13 +129,14 @@ namespace json {
         return ArrayItemContext(builder_.Value(std::move(value)));
     }
 
-    Builder::DictItemContext::DictItemContext(Builder &builder):ItemContext(builder){};
+    Builder::DictItemContext::DictItemContext(Builder &builder): ItemContext(builder) {
+    };
 
     Builder::KeyItemContext Builder::DictItemContext::Key(std::string &&key) {
-         return builder_.Key(std::move(key));
+        return builder_.Key(std::move(key));
     }
 
-    Builder &Builder::DictItemContext::EndDict() {
+    Builder &Builder::ItemContext::EndDict() {
         return builder_.EndDict();
     }
 }

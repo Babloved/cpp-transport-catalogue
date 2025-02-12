@@ -3,16 +3,14 @@
 #include "json.h"
 
 namespace json {
-
     class Builder final {
-        // class ValueItemContext;
         class KeyItemContext;
         class ArrayItemContext;
         class DictItemContext;
         class ItemContext;
-    public:
 
-        virtual ~Builder() = default;
+    public:
+        ~Builder() = default;
 
         Builder() {
             nodes_stack_.push(&root_node_);
@@ -34,6 +32,10 @@ namespace json {
         class ItemContext {
         public:
             explicit ItemContext(Builder &builder);
+            ArrayItemContext StartArray();
+            DictItemContext StartDict();
+            Builder &EndArray();
+            Builder &EndDict();
 
         protected:
             Builder &builder_;
@@ -43,24 +45,24 @@ namespace json {
         public:
             explicit KeyItemContext(Builder &builder);
             DictItemContext Value(Node::Value value);
-            DictItemContext StartDict();
-            ArrayItemContext StartArray();
+            Builder &EndArray() = delete;
+            Builder &EndDict() = delete;
         };
 
         class ArrayItemContext final : public ItemContext {
         public:
             explicit ArrayItemContext(Builder &builder);
-            ArrayItemContext StartArray();
-            DictItemContext StartDict();
-            Builder &EndArray();
             ArrayItemContext Value(Node::Value value);
+            Builder &EndDict() = delete;
         };
 
         class DictItemContext final : public ItemContext {
         public:
             explicit DictItemContext(Builder &builder);
             KeyItemContext Key(std::string &&key);
-            Builder &EndDict();
+            ArrayItemContext StartArray() = delete;
+            DictItemContext StartDict() = delete;
+            Builder &EndArray() = delete;
         };
     };
 }

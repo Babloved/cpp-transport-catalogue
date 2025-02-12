@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int main(){
+int main() {
     tc::TransportCatalogue db;
     renderer::MapRenderer map_renderer;
     auto doc = JsonReader::LoadStreamJSON(std::cin);

@@ -10,33 +10,33 @@
 using namespace std;
 using namespace json;
 
-json::Document JsonReader::LoadJSON(const string &&s){
+Document JsonReader::LoadJSON(const string &&s) {
     istringstream strm(s);
-    return json::Load(strm);
+    return Load(strm);
 }
 
-string Print(const json::Node &node){
+string Print(const Node &node) {
     ostringstream out;
-    json::Print(json::Document{node}, out);
+    Print(Document{node}, out);
     return out.str();
 }
 
-json::Document JsonReader::LoadStreamJSON(istream &input){
+Document JsonReader::LoadStreamJSON(istream &input) {
     long long bracket_counter{0};
     string json_raw_string;
     // Проверяем первый символ
     char ch;
     input.get(ch);
-    if (ch == '{'){
+    if (ch == '{') {
         ++bracket_counter;
         json_raw_string.push_back(ch);
-    } else{
+    } else {
         throw runtime_error("Incorrect JSON format, first char not a '{'");
     }
     // Чтение данных из потока
-    while (bracket_counter > 0){
+    while (bracket_counter > 0) {
         input.get(ch);
-        switch (ch){
+        switch (ch) {
             case '{':
                 ++bracket_counter;
                 break;
@@ -51,22 +51,22 @@ json::Document JsonReader::LoadStreamJSON(istream &input){
     return JsonReader::LoadJSON(std::move(json_raw_string));
 }
 
-void JsonReader::LoadBaseRequestsFromDocumentToDB(const json::Document &doc, tc::TransportCatalogue &db){
+void JsonReader::LoadBaseRequestsFromDocumentToDB(const Document &doc, tc::TransportCatalogue &db) {
     auto base_requests = doc.GetRoot().AsDict().at("base_requests").AsArray();
-    for (const auto &base_request: base_requests){
+    for (const auto &base_request: base_requests) {
         const auto data = base_request.AsDict();
         const auto &type_data = data.at("type").AsString();
-        if (type_data == "Stop"){
+        if (type_data == "Stop") {
             LoadStopRequestToDB(data, db);
-        } else if (type_data == "Bus"){
+        } else if (type_data == "Bus") {
             LoadBusRequestToDB(data, db);
         }
     }
 }
 
-void JsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+void JsonReader::LoadStopRequestToDB(const Dict &data, tc::TransportCatalogue &db) {
     tc::TransportCatalogue::StopDistanceMap stop_distance_map;
-    for (const auto &[stop_name, distance]: data.at("road_distances").AsDict()){
+    for (const auto &[stop_name, distance]: data.at("road_distances").AsDict()) {
         stop_distance_map.insert({stop_name, distance.AsDouble()});
     }
     db.AddStop(data.at("name").AsString(),
@@ -75,114 +75,100 @@ void JsonReader::LoadStopRequestToDB(const json::Dict &data, tc::TransportCatalo
     );
 }
 
-void JsonReader::LoadBusRequestToDB(const json::Dict &data, tc::TransportCatalogue &db){
+void JsonReader::LoadBusRequestToDB(const Dict &data, tc::TransportCatalogue &db) {
     auto &path = db.AddPath(data.at("name").AsString());
-    for (const auto &stop_name: data.at("stops").AsArray()){
+    for (const auto &stop_name: data.at("stops").AsArray()) {
         db.AddStopOnPath(stop_name.AsString(), path);
     }
     db.SetPathLooped(*path, data.at("is_roundtrip").AsBool());
 }
 
-void JsonReader::ProcessStopRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder & builder){
+void JsonReader::ProcessStopRequest(const Dict &data, RequestHandler &request_handler, Builder &builder) {
     auto paths = request_handler.GetBusesByStop(data.at("name").AsString());
-    if (paths){
+    if (paths) {
         builder.Key("buses");
-        // json::Array path_vec{};
         builder.StartArray();
-        for (const auto &path: *paths){
+        for (const auto &path: *paths) {
             builder.Value(path->path_name_);
-            // path_vec.push_back(path->path_name_);
         }
         builder.EndArray();
-        // builder["buses"] = path_vec;
-    } else{
+    } else {
         builder.Key("error_message").Value("not found");
-        // builder["error_message"] = string("not found");
     }
 }
 
-void JsonReader::ProcessBusRequest(const json::Dict &data, RequestHandler &request_handler, json::Builder &json_builder){
+void JsonReader::ProcessBusRequest(const Dict &data, RequestHandler &request_handler,
+                                   Builder &json_builder) {
     auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
 
-    if (path_stat){
+    if (path_stat) {
         json_builder.Key("curvature").Value(path_stat->curvature);
         json_builder.Key("route_length").Value(path_stat->route_length);
         json_builder.Key("stop_count").Value(static_cast<int>(path_stat->stop_count));
         json_builder.Key("unique_stop_count").Value(static_cast<int>(path_stat->unique_stop_count));
-        // builder["curvature"] = path_stat->curvature;
-        // builder["route_length"] = static_cast<int>(path_stat->route_length);
-        // builder["stop_count"] = static_cast<int>(path_stat->stop_count);
-        // builder["unique_stop_count"] = static_cast<int>(path_stat->unique_stop_count);
-    } else{
+    } else {
         json_builder.Key("error_message").Value("not found");
-        // builder["error_message"] = string("not found");
     }
 }
 
-json::Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler){
-    json::Builder json_builder;
+Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler) {
+    Builder json_builder;
     json_builder.StartArray();
     auto stat_requests = doc.GetRoot().AsDict().at("stat_requests").AsArray();
-    // json::Array output;
-    for (const auto &base_request: stat_requests){
+    for (const auto &base_request: stat_requests) {
         json_builder.StartDict();
         const auto data = base_request.AsDict();
-        // json::Dict response;
-        // response["request_id"] = data.at("id").AsInt();
         json_builder.Key("request_id").Value(data.at("id").AsInt());
         const auto &type_data = data.at("type").AsString();
-        if (type_data == "Stop"){
+        if (type_data == "Stop") {
             ProcessStopRequest(data, request_handler, json_builder);
-        } else if (type_data == "Bus"){
+        } else if (type_data == "Bus") {
             ProcessBusRequest(data, request_handler, json_builder);
-        } else if (type_data == "Map"){
+        } else if (type_data == "Map") {
             ProcessMapRequest(request_handler, json_builder);
         }
         json_builder.EndDict();
-        // output.push_back(response);
     }
     json_builder.EndArray();
-    // return Document(output);
     return Document(json_builder.Build());
 }
 
-void JsonReader::ProcessMapRequest(RequestHandler &request_handler, json::Builder &json_builder){
+void JsonReader::ProcessMapRequest(RequestHandler &request_handler, Builder &json_builder) {
     ostringstream map;
     request_handler.RenderMap().Render(map);
-    // json_builder["map"] = map.str();
     json_builder.Key("map").Value(map.str());
 }
 
-svg::Color GetColorFromNode(const json::Node &color_node){
+svg::Color GetColorFromNode(const Node &color_node) {
     svg::Color color;
-    if (color_node.IsArray()){
+    if (color_node.IsArray()) {
         auto &color_array = color_node.AsArray();
         ostringstream oss_color;
-        switch (color_array.size()){
+        switch (color_array.size()) {
             case 3:
                 oss_color << "rgb(" + to_string(color_array.at(0).AsInt()) << ","
-                          << color_array.at(1).AsInt() << ","
-                          << color_array.at(2).AsInt() << ")";
+                        << color_array.at(1).AsInt() << ","
+                        << color_array.at(2).AsInt() << ")";
                 break;
             case 4:
                 oss_color << "rgba(" << to_string(color_array.at(0).AsInt()) << ","
-                          << color_array.at(1).AsInt() << ","
-                          << color_array.at(2).AsInt() << ","
-                          << color_array.at(3).AsDouble() << ")";
+                        << color_array.at(1).AsInt() << ","
+                        << color_array.at(2).AsInt() << ","
+                        << color_array.at(3).AsDouble() << ")";
                 break;
             default:
                 throw logic_error("The number of color channels is not correct: " + to_string(color_array.size()));
         }
         color = oss_color.str();
-    } else if (color_node.IsString()){
+    } else if (color_node.IsString()) {
         color = color_node.AsString();
-    } else{
+    } else {
         throw logic_error("Node not a type color");
     }
     return color;
 }
 
-void JsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer){
+void JsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::MapRenderer &renderer) {
     auto &doc_render_settings = doc.GetRoot().AsDict().at("render_settings").AsDict();
     renderer::MapRenderer::RenderSettings render_settings;
     render_settings.width_ = doc_render_settings.at("width").AsDouble();
@@ -199,7 +185,7 @@ void JsonReader::LoadRenderSettingsFromDocument(const Document &doc, renderer::M
     render_settings.underlayer_color_ = GetColorFromNode(doc_render_settings.at("underlayer_color"));
     render_settings.underlayer_width_ = doc_render_settings.at("underlayer_width").AsDouble();
     auto &color_palette = doc_render_settings.at("color_palette").AsArray();
-    for (const auto &color: color_palette){
+    for (const auto &color: color_palette) {
         render_settings.color_palette_.push_back(GetColorFromNode(color));
     }
     renderer = renderer::MapRenderer(render_settings);
