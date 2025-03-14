@@ -105,4 +105,19 @@ namespace transport_router{
     const RoutingSettings& TransportRouter::GetRoutingSettings() const{
         return settings_;
     }
+    const graph::Edge<double>& TransportRouter::GetEdge(graph::EdgeId edge_id) const {
+    return graph_.GetEdge(edge_id);
+}
+
+const transport_router::RouteEdgeInfo& TransportRouter::GetEdgeInfo(graph::EdgeId edge_id) const {
+    return edge_id_to_info_.at(edge_id);
+}
+
+std::string TransportRouter::GetStopNameByVertexId(graph::VertexId vertex_id) const {
+    return vertex_id_to_stop_name_.at(vertex_id);
+}
+
+double TransportRouter::GetBusWaitTime() const {
+    return settings_.bus_wait_time;
+}
 } // namespace transport_router

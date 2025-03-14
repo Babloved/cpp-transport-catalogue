@@ -31,10 +31,13 @@ namespace transport_router {
         const std::unordered_map<graph::EdgeId, RouteEdgeInfo>& GetEdgeInfo() const;
         const std::unordered_map<graph::VertexId, std::string>& GetVertexToStopMap() const;
         const RoutingSettings& GetRoutingSettings() const;
+        [[nodiscard]] const graph::Edge<double>& GetEdge(graph::EdgeId edge_id) const;
+        [[nodiscard]] const RouteEdgeInfo& GetEdgeInfo(graph::EdgeId edge_id) const;
+        [[nodiscard]] std::string GetStopNameByVertexId(graph::VertexId vertex_id) const;
+        [[nodiscard]] double GetBusWaitTime() const;
 
     private:
         void BuildGraph();
-        double CalculateTravelTime(const domain::Stop* from, const domain::Stop* to) const;
 
         const tc::TransportCatalogue& catalogue_;
         RoutingSettings settings_;

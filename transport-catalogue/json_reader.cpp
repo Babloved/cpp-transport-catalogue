@@ -124,16 +124,17 @@ void JsonReader::ProcessRouteRequest(const Dict& data, RequestHandler& request_h
         json_builder.StartArray();
 
         for (const auto edge_id : route_info->edges) {
-            const auto& edge = request_handler.GetEdge(edge_id);
-            if (edge.to == edge.from + 1 && std::abs(edge.weight - request_handler.GetBusWaitTime()) < 1e-6) {
-                std::string stop_name = request_handler.GetStopNameByVertexId(edge.from);
+            const auto& router = request_handler.GetRouter();
+            const auto& edge = router.GetEdge(edge_id);
+            if (edge.to == edge.from + 1 && std::abs(edge.weight - router.GetBusWaitTime()) < 1e-6) {
+                std::string stop_name = router.GetStopNameByVertexId(edge.from);
                 json_builder.StartDict();
                 json_builder.Key("type").Value("Wait");
                 json_builder.Key("stop_name").Value(stop_name);
-                json_builder.Key("time").Value(request_handler.GetBusWaitTime()); // Время ожидания
+                json_builder.Key("time").Value(router.GetBusWaitTime()); // Время ожидания
                 json_builder.EndDict();
             } else {
-                const auto& edge_info = request_handler.GetEdgeInfo(edge_id);
+                const auto& edge_info = router.GetEdgeInfo(edge_id);
                 json_builder.StartDict();
                 json_builder.Key("type").Value("Bus");
                 json_builder.Key("bus").Value(edge_info.bus_name);

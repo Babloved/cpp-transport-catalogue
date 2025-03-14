@@ -40,17 +40,7 @@ public:
     [[nodiscard]] std::optional<graph::Router<double>::RouteInfo> BuildRoute(
         const std::string& from, const std::string& to) const;
 
-    // Возвращает информацию о ребре графа по его идентификатору
-    [[nodiscard]] const graph::Edge<double>& GetEdge(graph::EdgeId edge_id) const;
-
-    // Возвращает информацию о ребре маршрута (автобус, индексы остановок)
-    [[nodiscard]] const transport_router::RouteEdgeInfo& GetEdgeInfo(graph::EdgeId edge_id) const;
-
-    // Возвращает название остановки по идентификатору вершины графа
-    [[nodiscard]] std::string GetStopNameByVertexId(graph::VertexId vertex_id) const;
-
-    // Возвращает время ожидания автобуса из настроек маршрутизации
-    [[nodiscard]] double GetBusWaitTime() const;
+    [[nodiscard]] const transport_router::TransportRouter& GetRouter() const;
 
 private:
     const tc::TransportCatalogue& db_; // Ссылка на транспортный каталог

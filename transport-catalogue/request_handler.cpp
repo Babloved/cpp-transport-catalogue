@@ -90,18 +90,4 @@ optional<graph::Router<double>::RouteInfo> RequestHandler::BuildRoute(const stri
     return router_.BuildRoute(from, to);
 }
 
-const graph::Edge<double>& RequestHandler::GetEdge(graph::EdgeId edge_id) const {
-    return router_.GetGraph().GetEdge(edge_id);
-}
-
-const transport_router::RouteEdgeInfo& RequestHandler::GetEdgeInfo(graph::EdgeId edge_id) const {
-    return router_.GetEdgeInfo().at(edge_id);
-}
-
-string RequestHandler::GetStopNameByVertexId(graph::VertexId vertex_id) const {
-    return router_.GetVertexToStopMap().at(vertex_id);
-}
-
-double RequestHandler::GetBusWaitTime() const {
-    return router_.GetRoutingSettings().bus_wait_time;
-}
+const transport_router::TransportRouter& RequestHandler::GetRouter() const { return router_; }
