@@ -9,6 +9,7 @@
 #include "map_renderer.h"
 #include "json.h"
 #include "domain.h"
+#include "transport_router.h"
 
 struct PathStat {
     double curvature;
@@ -19,15 +20,40 @@ struct PathStat {
 
 class RequestHandler {
 public:
-    RequestHandler(const tc::TransportCatalogue &db,
-                   const renderer::MapRenderer &renderer) : db_(db), renderer_(renderer) {
-    };
-    [[nodiscard]] std::optional<PathStat> GetPathStat(const std::string_view &path_name) const;
-    [[nodiscard]] std::set<std::shared_ptr<domain::Path>, domain::PathComp> *GetBusesByStop(
-        const std::string_view &stop_name) const;
+    RequestHandler(const tc::TransportCatalogue& db,
+                   const renderer::MapRenderer& renderer,
+                   transport_router::TransportRouter& router)
+        : db_(db), renderer_(renderer), router_(router) {
+    }
+
+    // Возвращает статистику для маршрута
+    [[nodiscard]] std::optional<PathStat> GetPathStat(const std::string_view& path_name) const;
+
+    // Возвращает список маршрутов, проходящих через указанную остановку
+    [[nodiscard]] std::set<std::shared_ptr<domain::Path>, domain::PathComp>* GetBusesByStop(
+        const std::string_view& stop_name) const;
+
+    // Рендерит карту маршрутов и остановок
     [[nodiscard]] svg::Document RenderMap() const;
 
+    // Строит маршрут между двумя остановками
+    [[nodiscard]] std::optional<graph::Router<double>::RouteInfo> BuildRoute(
+        const std::string& from, const std::string& to) const;
+
+    // Возвращает информацию о ребре графа по его идентификатору
+    [[nodiscard]] const graph::Edge<double>& GetEdge(graph::EdgeId edge_id) const;
+
+    // Возвращает информацию о ребре маршрута (автобус, индексы остановок)
+    [[nodiscard]] const transport_router::RouteEdgeInfo& GetEdgeInfo(graph::EdgeId edge_id) const;
+
+    // Возвращает название остановки по идентификатору вершины графа
+    [[nodiscard]] std::string GetStopNameByVertexId(graph::VertexId vertex_id) const;
+
+    // Возвращает время ожидания автобуса из настроек маршрутизации
+    [[nodiscard]] double GetBusWaitTime() const;
+
 private:
-    const tc::TransportCatalogue &db_;
-    const renderer::MapRenderer &renderer_;
+    const tc::TransportCatalogue& db_; // Ссылка на транспортный каталог
+    const renderer::MapRenderer& renderer_; // Ссылка на рендерер карты
+    transport_router::TransportRouter& router_; // Ссылка на маршрутизатор
 };

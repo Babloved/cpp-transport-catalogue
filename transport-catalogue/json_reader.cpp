@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-
+#include <cctype> // Добавляем заголовочный файл
 using namespace std;
 using namespace json;
 
@@ -24,31 +24,29 @@ string Print(const Node &node) {
 Document JsonReader::LoadStreamJSON(istream &input) {
     long long bracket_counter{0};
     string json_raw_string;
-    // Проверяем первый символ
+    // Пропускаем пробелы перед первым символом '{'
     char ch;
-    input.get(ch);
-    if (ch == '{') {
-        ++bracket_counter;
-        json_raw_string.push_back(ch);
-    } else {
+    while (input.get(ch) && isspace(ch)) {}
+    if (!input) {
+        throw runtime_error("Empty input");
+    }
+    if (ch != '{') {
         throw runtime_error("Incorrect JSON format, first char not a '{'");
     }
+    bracket_counter = 1;
+    json_raw_string.push_back(ch);
     // Чтение данных из потока
-    while (bracket_counter > 0) {
-        input.get(ch);
+    while (bracket_counter > 0 && input.get(ch)) {
         switch (ch) {
-            case '{':
-                ++bracket_counter;
-                break;
-            case '}':
-                --bracket_counter;
-                break;
-            default:
-                break;
+            case '{': ++bracket_counter; break;
+            case '}': --bracket_counter; break;
         }
         json_raw_string.push_back(ch);
     }
-    return JsonReader::LoadJSON(std::move(json_raw_string));
+    if (bracket_counter != 0) {
+        throw runtime_error("Unbalanced brackets in JSON");
+    }
+    return JsonReader::LoadJSON(move(json_raw_string));
 }
 
 void JsonReader::LoadBaseRequestsFromDocumentToDB(const Document &doc, tc::TransportCatalogue &db) {
@@ -102,10 +100,50 @@ void JsonReader::ProcessBusRequest(const Dict &data, RequestHandler &request_han
     auto path_stat = request_handler.GetPathStat(data.at("name").AsString());
 
     if (path_stat) {
-        json_builder.Key("curvature").Value(path_stat->curvature);
+        json_builder.Key("curvature").Value(std::round(path_stat->curvature * 100000) / 100000.0);
         json_builder.Key("route_length").Value(path_stat->route_length);
         json_builder.Key("stop_count").Value(static_cast<int>(path_stat->stop_count));
         json_builder.Key("unique_stop_count").Value(static_cast<int>(path_stat->unique_stop_count));
+    } else {
+        json_builder.Key("error_message").Value("not found");
+    }
+}
+void JsonReader::LoadRoutingSettingsFromDocument(const json::Document& doc, transport_router::TransportRouter& router) {
+    const auto& routing_settings = doc.GetRoot().AsDict().at("routing_settings").AsDict();
+    transport_router::RoutingSettings settings;
+    settings.bus_wait_time = routing_settings.at("bus_wait_time").AsInt();
+    settings.bus_velocity = routing_settings.at("bus_velocity").AsDouble();
+    router.SetRoutingSettings(settings);
+}
+
+void JsonReader::ProcessRouteRequest(const Dict& data, RequestHandler& request_handler, Builder& json_builder) {
+    auto route_info = request_handler.BuildRoute(data.at("from").AsString(), data.at("to").AsString());
+    if (route_info) {
+        json_builder.Key("total_time").Value(route_info->weight);
+        json_builder.Key("items");
+        json_builder.StartArray();
+
+        for (const auto edge_id : route_info->edges) {
+            const auto& edge = request_handler.GetEdge(edge_id);
+            if (edge.to == edge.from + 1 && std::abs(edge.weight - request_handler.GetBusWaitTime()) < 1e-6) {
+                std::string stop_name = request_handler.GetStopNameByVertexId(edge.from);
+                json_builder.StartDict();
+                json_builder.Key("type").Value("Wait");
+                json_builder.Key("stop_name").Value(stop_name);
+                json_builder.Key("time").Value(request_handler.GetBusWaitTime()); // Время ожидания
+                json_builder.EndDict();
+            } else {
+                const auto& edge_info = request_handler.GetEdgeInfo(edge_id);
+                json_builder.StartDict();
+                json_builder.Key("type").Value("Bus");
+                json_builder.Key("bus").Value(edge_info.bus_name);
+                json_builder.Key("span_count").Value(static_cast<int>(edge_info.end_stop_idx - edge_info.start_stop_idx));
+
+                json_builder.Key("time").Value(edge.weight); // Время на автобусе
+                json_builder.EndDict();
+            }
+        }
+        json_builder.EndArray();
     } else {
         json_builder.Key("error_message").Value("not found");
     }
@@ -126,6 +164,8 @@ Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHan
             ProcessBusRequest(data, request_handler, json_builder);
         } else if (type_data == "Map") {
             ProcessMapRequest(request_handler, json_builder);
+        } else if (type_data == "Route") {
+            ProcessRouteRequest(data, request_handler, json_builder);
         }
         json_builder.EndDict();
     }

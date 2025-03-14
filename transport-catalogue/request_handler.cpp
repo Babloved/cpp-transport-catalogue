@@ -18,10 +18,10 @@ optional<PathStat> RequestHandler::GetPathStat(const string_view &path_name) con
     return {nullopt};
 }
 
-set<shared_ptr<domain::Path>, domain::PathComp> *RequestHandler::GetBusesByStop(const string_view &stop_name) const {
-    auto p_stop = db_.GetStopByName(stop_name);
-    if (p_stop) {
-        return &p_stop->paths_on_stop_;
+set<shared_ptr<domain::Path>, domain::PathComp>* RequestHandler::GetBusesByStop(const string_view &stop_name) const {
+    auto stop = db_.GetStopByName(stop_name);
+    if (stop) {
+        return &stop->paths_on_stop_;
     }
     return nullptr;
 }
@@ -84,4 +84,24 @@ Document RequestHandler::RenderMap() const {
         }
     }
     return doc;
+}
+
+optional<graph::Router<double>::RouteInfo> RequestHandler::BuildRoute(const string& from, const string& to) const {
+    return router_.BuildRoute(from, to);
+}
+
+const graph::Edge<double>& RequestHandler::GetEdge(graph::EdgeId edge_id) const {
+    return router_.GetGraph().GetEdge(edge_id);
+}
+
+const transport_router::RouteEdgeInfo& RequestHandler::GetEdgeInfo(graph::EdgeId edge_id) const {
+    return router_.GetEdgeInfo().at(edge_id);
+}
+
+string RequestHandler::GetStopNameByVertexId(graph::VertexId vertex_id) const {
+    return router_.GetVertexToStopMap().at(vertex_id);
+}
+
+double RequestHandler::GetBusWaitTime() const {
+    return router_.GetRoutingSettings().bus_wait_time;
 }
