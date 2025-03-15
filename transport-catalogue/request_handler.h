@@ -37,8 +37,7 @@ public:
     [[nodiscard]] svg::Document RenderMap() const;
 
     // Строит маршрут между двумя остановками
-    [[nodiscard]] std::optional<graph::Router<double>::RouteInfo> BuildRoute(
-        const std::string& from, const std::string& to) const;
+    [[nodiscard]] std::optional<transport_router::RouteResult> BuildRoute(const std::string& from, const std::string& to) const;
 
     [[nodiscard]] const transport_router::TransportRouter& GetRouter() const;
 

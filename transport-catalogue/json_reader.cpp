@@ -108,41 +108,27 @@ void JsonReader::ProcessBusRequest(const Dict &data, RequestHandler &request_han
         json_builder.Key("error_message").Value("not found");
     }
 }
-void JsonReader::LoadRoutingSettingsFromDocument(const json::Document& doc, transport_router::TransportRouter& router) {
-    const auto& routing_settings = doc.GetRoot().AsDict().at("routing_settings").AsDict();
-    transport_router::RoutingSettings settings;
-    settings.bus_wait_time = routing_settings.at("bus_wait_time").AsInt();
-    settings.bus_velocity = routing_settings.at("bus_velocity").AsDouble();
-    router.SetRoutingSettings(settings);
-}
+
 
 void JsonReader::ProcessRouteRequest(const Dict& data, RequestHandler& request_handler, Builder& json_builder) {
-    auto route_info = request_handler.BuildRoute(data.at("from").AsString(), data.at("to").AsString());
-    if (route_info) {
-        json_builder.Key("total_time").Value(route_info->weight);
+    auto route_result = request_handler.BuildRoute(data.at("from").AsString(), data.at("to").AsString());
+    if (route_result) {
+        json_builder.Key("total_time").Value(route_result->total_time);
         json_builder.Key("items");
         json_builder.StartArray();
-
-        for (const auto edge_id : route_info->edges) {
-            const auto& router = request_handler.GetRouter();
-            const auto& edge = router.GetEdge(edge_id);
-            if (edge.to == edge.from + 1 && std::abs(edge.weight - router.GetBusWaitTime()) < 1e-6) {
-                std::string stop_name = router.GetStopNameByVertexId(edge.from);
-                json_builder.StartDict();
+        for (const auto& item : route_result->items) {
+            json_builder.StartDict();
+            if (item.type == transport_router::RouteItem::Type::WAIT) {
                 json_builder.Key("type").Value("Wait");
-                json_builder.Key("stop_name").Value(stop_name);
-                json_builder.Key("time").Value(router.GetBusWaitTime()); // Время ожидания
-                json_builder.EndDict();
-            } else {
-                const auto& edge_info = router.GetEdgeInfo(edge_id);
-                json_builder.StartDict();
+                json_builder.Key("stop_name").Value(item.name);
+                json_builder.Key("time").Value(item.time);
+            } else { // BUS
                 json_builder.Key("type").Value("Bus");
-                json_builder.Key("bus").Value(edge_info.bus_name);
-                json_builder.Key("span_count").Value(static_cast<int>(edge_info.end_stop_idx - edge_info.start_stop_idx));
-
-                json_builder.Key("time").Value(edge.weight); // Время на автобусе
-                json_builder.EndDict();
+                json_builder.Key("bus").Value(item.name);
+                json_builder.Key("span_count").Value(static_cast<int>(item.span_count));
+                json_builder.Key("time").Value(item.time);
             }
+            json_builder.EndDict();
         }
         json_builder.EndArray();
     } else {
@@ -150,6 +136,13 @@ void JsonReader::ProcessRouteRequest(const Dict& data, RequestHandler& request_h
     }
 }
 
+transport_router::RoutingSettings JsonReader::LoadRoutingSettingsFromDocument(const json::Document& doc) {
+    const auto& routing_settings = doc.GetRoot().AsDict().at("routing_settings").AsDict();
+    transport_router::RoutingSettings settings;
+    settings.bus_wait_time = routing_settings.at("bus_wait_time").AsInt();
+    settings.bus_velocity = routing_settings.at("bus_velocity").AsDouble();
+    return settings;
+}
 Document JsonReader::ProcessRequestsFromDocument(const Document &doc, RequestHandler &request_handler) {
     Builder json_builder;
     json_builder.StartArray();

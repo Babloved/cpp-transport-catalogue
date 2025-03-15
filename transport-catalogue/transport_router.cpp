@@ -3,11 +3,8 @@
 #include <cmath>
 
 namespace transport_router{
-    TransportRouter::TransportRouter(const tc::TransportCatalogue& catalogue)
-        : catalogue_(catalogue){}
-
-    void TransportRouter::SetRoutingSettings(const RoutingSettings& settings){
-        settings_ = settings;
+    TransportRouter::TransportRouter(const tc::TransportCatalogue& catalogue, const RoutingSettings& settings)
+        : catalogue_(catalogue), settings_(settings) {
         BuildGraph();
         router_ = std::make_unique<graph::Router<double>>(graph_);
     }
@@ -82,42 +79,30 @@ namespace transport_router{
         }
     }
 
-    std::optional<graph::Router<double>::RouteInfo> TransportRouter::BuildRoute(const std::string& from,
-        const std::string& to) const{
-        if (stop_ids_.count(from) == 0 || stop_ids_.count(to) == 0){
+    std::optional<RouteResult> TransportRouter::BuildRoute(const std::string& from, const std::string& to) const {
+        if (stop_ids_.count(from) == 0 || stop_ids_.count(to) == 0) {
             return std::nullopt;
         }
-        return router_->BuildRoute(stop_ids_.at(from), stop_ids_.at(to));
+        auto route_info = router_->BuildRoute(stop_ids_.at(from), stop_ids_.at(to));
+        if (!route_info) {
+            return std::nullopt;
+        }
+
+        RouteResult result;
+        result.total_time = route_info->weight;
+        for (const auto edge_id : route_info->edges) {
+            const auto& edge = graph_.GetEdge(edge_id);
+            if (edge.to == edge.from + 1 && std::abs(edge.weight - settings_.bus_wait_time) < 1e-6) {
+                // Ожидание
+                std::string stop_name = vertex_id_to_stop_name_.at(edge.from);
+                result.items.push_back({RouteItem::Type::WAIT, stop_name,static_cast<double>(settings_.bus_wait_time), 0});
+            } else {
+                // Поездка на автобусе
+                const auto& edge_info = edge_id_to_info_.at(edge_id);
+                size_t span_count = edge_info.end_stop_idx - edge_info.start_stop_idx;
+                result.items.push_back({RouteItem::Type::BUS, edge_info.bus_name, edge.weight, span_count});
+            }
+        }
+        return result;
     }
-
-    const graph::DirectedWeightedGraph<double>& TransportRouter::GetGraph() const{
-        return graph_;
-    }
-
-    const std::unordered_map<graph::EdgeId, RouteEdgeInfo>& TransportRouter::GetEdgeInfo() const{
-        return edge_id_to_info_;
-    }
-
-    const std::unordered_map<graph::VertexId, std::string>& TransportRouter::GetVertexToStopMap() const{
-        return vertex_id_to_stop_name_;
-    }
-
-    const RoutingSettings& TransportRouter::GetRoutingSettings() const{
-        return settings_;
-    }
-    const graph::Edge<double>& TransportRouter::GetEdge(graph::EdgeId edge_id) const {
-    return graph_.GetEdge(edge_id);
-}
-
-const transport_router::RouteEdgeInfo& TransportRouter::GetEdgeInfo(graph::EdgeId edge_id) const {
-    return edge_id_to_info_.at(edge_id);
-}
-
-std::string TransportRouter::GetStopNameByVertexId(graph::VertexId vertex_id) const {
-    return vertex_id_to_stop_name_.at(vertex_id);
-}
-
-double TransportRouter::GetBusWaitTime() const {
-    return settings_.bus_wait_time;
-}
 } // namespace transport_router

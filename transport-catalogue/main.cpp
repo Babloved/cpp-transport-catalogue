@@ -12,10 +12,14 @@ int main() {
     auto doc = JsonReader::LoadStreamJSON(std::cin);
     JsonReader::LoadRenderSettingsFromDocument(doc, map_renderer);
     JsonReader::LoadBaseRequestsFromDocumentToDB(doc, db);
-    transport_router::TransportRouter transport_router(db);
-    JsonReader::LoadRoutingSettingsFromDocument(doc, transport_router);
+
+    // Загружаем настройки маршрутизации через JsonReader
+    auto routing_settings = JsonReader::LoadRoutingSettingsFromDocument(doc);
+
+    // Передаем настройки в конструктор TransportRouter
+    transport_router::TransportRouter transport_router(db, routing_settings);
     RequestHandler request_handler(db, map_renderer, transport_router);
     auto doc_res = JsonReader::ProcessRequestsFromDocument(doc, request_handler);
-    Print(doc_res, cout);
+    Print(doc_res, std::cout);
     return 0;
 }

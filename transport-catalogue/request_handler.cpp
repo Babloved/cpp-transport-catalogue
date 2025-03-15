@@ -86,7 +86,7 @@ Document RequestHandler::RenderMap() const {
     return doc;
 }
 
-optional<graph::Router<double>::RouteInfo> RequestHandler::BuildRoute(const string& from, const string& to) const {
+std::optional<transport_router::RouteResult> RequestHandler::BuildRoute(const std::string& from, const std::string& to) const {
     return router_.BuildRoute(from, to);
 }
 

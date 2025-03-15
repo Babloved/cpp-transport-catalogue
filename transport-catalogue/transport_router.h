@@ -10,8 +10,24 @@
 namespace transport_router {
 
     struct RoutingSettings {
-        int bus_wait_time = 0;
-        double bus_velocity = 0.0;
+        int bus_wait_time = 0;    // Время ожидания автобуса (минуты)
+        double bus_velocity = 0.0; // Скорость автобуса (км/ч)
+    };
+
+    struct RouteItem {
+        enum class Type {
+            WAIT,
+            BUS
+        };
+        Type type;
+        std::string name;
+        double time;
+        size_t span_count;
+    };
+
+    struct RouteResult {
+        double total_time;
+        std::vector<RouteItem> items;
     };
 
     struct RouteEdgeInfo {
@@ -22,21 +38,14 @@ namespace transport_router {
 
     class TransportRouter {
     public:
-        explicit TransportRouter(const tc::TransportCatalogue& catalogue);
+        // Конструктор с настройками
+        explicit TransportRouter(const tc::TransportCatalogue& catalogue, const RoutingSettings& settings);
 
-        void SetRoutingSettings(const RoutingSettings& settings);
-        std::optional<graph::Router<double>::RouteInfo> BuildRoute(const std::string& from, const std::string& to) const;
-
-        const graph::DirectedWeightedGraph<double>& GetGraph() const;
-        const std::unordered_map<graph::EdgeId, RouteEdgeInfo>& GetEdgeInfo() const;
-        const std::unordered_map<graph::VertexId, std::string>& GetVertexToStopMap() const;
-        const RoutingSettings& GetRoutingSettings() const;
-        [[nodiscard]] const graph::Edge<double>& GetEdge(graph::EdgeId edge_id) const;
-        [[nodiscard]] const RouteEdgeInfo& GetEdgeInfo(graph::EdgeId edge_id) const;
-        [[nodiscard]] std::string GetStopNameByVertexId(graph::VertexId vertex_id) const;
-        [[nodiscard]] double GetBusWaitTime() const;
+        // Единственный публичный метод для построения маршрута
+        std::optional<RouteResult> BuildRoute(const std::string& from, const std::string& to) const;
 
     private:
+
         void BuildGraph();
 
         const tc::TransportCatalogue& catalogue_;
